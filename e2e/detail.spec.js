@@ -20,9 +20,7 @@ test('detail shows the tour, itinerary and the enquiry link', async ({ page }, t
   });
 });
 
-test('gallery thumbnails switch the lead image', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'desktop', 'checked once at desktop size');
-
+test('gallery thumbnails switch the lead image', async ({ page }) => {
   await page.goto('/tours/komodo-sailing-3d2n');
   const thumbs = page.getByRole('button', { name: /Show photo/ });
   await expect(thumbs).toHaveCount(3);

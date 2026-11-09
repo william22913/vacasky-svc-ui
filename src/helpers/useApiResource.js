@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { isCanceled } from '../core/utils/errors';
 
 export function useApiResource(loader, deps) {
   const [state, setState] = useState({ status: 'loading', data: null, error: null });
   const [attempt, setAttempt] = useState(0);
+  const loaderRef = useRef(loader);
+  loaderRef.current = loader;
+  const depsKey = JSON.stringify(deps);
 
   useEffect(() => {
     let active = true;
@@ -11,7 +14,7 @@ export function useApiResource(loader, deps) {
 
     setState((previous) => ({ ...previous, status: 'loading', error: null }));
 
-    loader(controller.signal)
+    loaderRef.current(controller.signal)
       .then((data) => {
         if (active) setState({ status: 'success', data, error: null });
       })
@@ -23,8 +26,7 @@ export function useApiResource(loader, deps) {
       active = false;
       controller.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...deps, attempt]);
+  }, [depsKey, attempt]);
 
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 

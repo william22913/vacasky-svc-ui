@@ -38,20 +38,27 @@ test('destination filter writes the slug to the URL', async ({ page }, testInfo)
   await expect(page).toHaveURL(/destination=bali/);
 });
 
-test('mobile filters open in a bottom drawer and apply', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'drawer exists below 1024px');
-
+test('filters are inline on desktop and open in a bottom drawer on mobile', async ({
+  page,
+}, testInfo) => {
   await page.goto('/tours');
-  await page.getByRole('button', { name: /Filters/ }).click();
-  await expect(page.getByText('Apply filters')).toBeVisible();
 
-  await page.screenshot({
-    path: 'docs/FEAT-001/evidence/listing-filters-mobile.png',
-    fullPage: false,
-  });
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: /Filters/ }).click();
+    await expect(page.getByText('Apply filters')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Apply filters' }).click();
-  await expect(page.getByText('Apply filters')).toBeHidden();
+    await page.screenshot({
+      path: 'docs/FEAT-001/evidence/listing-filters-mobile.png',
+      fullPage: false,
+    });
+
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(page.getByText('Apply filters')).toBeHidden();
+    return;
+  }
+
+  await expect(page.getByRole('combobox', { name: 'Destination' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Filters/ })).toBeHidden();
 });
 
 test('pagination loads the next page of twelve tours', async ({ page }) => {

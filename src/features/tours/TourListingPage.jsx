@@ -87,21 +87,22 @@ export function TourListingPage() {
     setKeyword(params.q);
   }, [params.q]);
 
-  const filterKey = JSON.stringify([
-    params.destination,
-    params.category,
-    params.priceMin,
-    params.priceMax,
-    params.durationMin,
-    params.durationMax,
-    params.sort,
-  ]);
+  const filterDestination = params.destination[0] || null;
+  const filterCategory = params.category[0] || null;
+  const { priceMin, priceMax, durationMin, durationMax, sort } = params;
 
   useEffect(() => {
-    setDraft(draftFrom(paramsRef.current));
+    setDraft({
+      destination: filterDestination,
+      category: filterCategory,
+      priceMin,
+      priceMax,
+      durationMin,
+      durationMax,
+      sort,
+    });
     setRangeError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey]);
+  }, [filterDestination, filterCategory, priceMin, priceMax, durationMin, durationMax, sort]);
 
   useEffect(() => {
     const next = debouncedKeyword.trim().slice(0, MAX_SEARCH_LENGTH);

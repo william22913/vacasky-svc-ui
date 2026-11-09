@@ -21,18 +21,23 @@ export function useTourListing(params) {
     page,
   ]);
 
+  // The request body is rebuilt from the latest params whenever requestKey
+  // changes; the ref keeps the effect free of array identities and lets the
+  // key decide when a new request is due.
+  const requestRef = useRef(null);
+  requestRef.current = { q, destination, category, priceMin, priceMax, durationMin, durationMax, sort, page };
+  const invalidRangeRef = useRef(invalidRange);
+  invalidRangeRef.current = invalidRange;
+
   useEffect(() => {
-    if (invalidRange) return undefined;
+    if (invalidRangeRef.current) return undefined;
 
     const requestId = ++sequence.current;
     const controller = new AbortController();
 
     setState((previous) => ({ status: 'loading', data: previous.data, error: null }));
 
-    fetchTours(
-      { q, destination, category, priceMin, priceMax, durationMin, durationMax, sort, page, pageSize: PAGE_SIZE },
-      controller.signal
-    )
+    fetchTours({ ...requestRef.current, pageSize: PAGE_SIZE }, controller.signal)
       .then((data) => {
         if (requestId === sequence.current) setState({ status: 'success', data, error: null });
       })
@@ -42,8 +47,7 @@ export function useTourListing(params) {
       });
 
     return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestKey, attempt]);
+  }, [requestKey, attempt, invalidRange]);
 
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 
