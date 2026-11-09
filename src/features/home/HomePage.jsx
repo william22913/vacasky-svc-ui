@@ -17,10 +17,11 @@ export function HomePage() {
   return (
     <>
       <HomeHero hero={data?.hero || FALLBACK_HERO} />
-      <FeaturedTours status={status} tours={data?.featuredTours || []} onRetry={retry} />
+      {/* The contract asks for at most six of each; never render more. */}
+      <FeaturedTours status={status} tours={data?.featuredTours?.slice(0, 6) || []} onRetry={retry} />
       <FeaturedDestinations
         status={status}
-        destinations={data?.featuredDestinations || []}
+        destinations={data?.featuredDestinations?.slice(0, 6) || []}
         onRetry={retry}
       />
     </>

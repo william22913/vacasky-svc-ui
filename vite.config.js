@@ -36,6 +36,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff,woff2}'],
+        // Let the NetworkFirst navigation route handle page loads so an
+        // offline navigation reaches /offline.html instead of the precached
+        // app shell (the default navigation route would shadow it).
+        navigateFallback: null,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === 'navigate',
