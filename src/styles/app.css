@@ -39,6 +39,11 @@
 }
 
 .site-nav__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--color-text);
   font-size: 14px;
   font-weight: 500;
@@ -144,6 +149,8 @@
 .site-footer__list a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: 44px;
   min-height: 44px;
 }
 
@@ -837,6 +844,11 @@
 }
 
 .detail-meta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   font-weight: 500;
 }
 
