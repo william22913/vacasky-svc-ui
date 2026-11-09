@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#2C7BA8" />
+    <title>You're offline - vacasky</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #ffffff;
+        color: #111111;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        text-align: center;
+      }
+      main {
+        max-width: 480px;
+      }
+      .wordmark {
+        margin: 0 0 32px;
+        color: #2c7ba8;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 32px;
+        line-height: 1.1;
+      }
+      p {
+        margin: 0 0 24px;
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      button {
+        min-height: 44px;
+        padding: 0 28px;
+        border: 0;
+        border-radius: 9999px;
+        background: #2c7ba8;
+        color: #ffffff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #1f5f85;
+      }
+      button:focus-visible {
+        outline: 2px solid #2c7ba8;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="wordmark">VACASKY</p>
+      <h1>You're offline</h1>
+      <p>Check your connection and try again.</p>
+      <button type="button" onclick="window.location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

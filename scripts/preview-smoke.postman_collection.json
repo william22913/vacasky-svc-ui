@@ -1,0 +1,67 @@
+{
+  "info": {
+    "name": "vacasky-svc-ui preview smoke",
+    "description": "Checks the built image: nginx serves the SPA shell, React Router routes fall back to it, the PWA manifest is published and /api is proxied.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "http://web:80" }],
+  "item": [
+    {
+      "name": "home shell",
+      "request": { "method": "GET", "url": "{{baseUrl}}/" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 html', () => { pm.response.to.have.status(200); pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html'); });",
+              "pm.test('app root present', () => { pm.expect(pm.response.text()).to.include('id=\"root\"'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "spa fallback for a detail route",
+      "request": { "method": "GET", "url": "{{baseUrl}}/tours/komodo-sailing-3d2n" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 html shell', () => { pm.response.to.have.status(200); pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "web app manifest",
+      "request": { "method": "GET", "url": "{{baseUrl}}/manifest.webmanifest" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('manifest published', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().name).to.eql('vacasky - Tours & Travel'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "api proxy health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/healthz" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('api reachable through nginx', () => { pm.response.to.have.status(200); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
