@@ -1,5 +1,5 @@
 import { InputNumber, Select } from 'antd';
-import { SORT_OPTIONS } from '../features/tours/listingParams';
+import { CATEGORY_OPTIONS, SORT_OPTIONS } from '../features/tours/listingParams';
 
 function numberOrNull(value) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
@@ -7,17 +7,13 @@ function numberOrNull(value) {
 
 export function FilterFields({
   idPrefix,
-  filters,
+  destinations = [],
   value,
   onChange,
   onCommitRange,
   rangeError,
 }) {
-  const destinations = (filters?.destinations || []).map((item) => ({
-    value: item.slug,
-    label: item.name,
-  }));
-  const categories = (filters?.categories || []).map((item) => ({
+  const destinationOptions = destinations.map((item) => ({
     value: item.slug,
     label: item.name,
   }));
@@ -33,10 +29,10 @@ export function FilterFields({
           allowClear
           showSearch
           optionFilterProp="label"
-          placeholder="Any destination"
+          placeholder={destinationOptions.length === 0 ? 'Loading destinations' : 'Any destination'}
           value={value.destination ?? undefined}
           onChange={(next) => onChange({ destination: next ?? null })}
-          options={destinations}
+          options={destinationOptions}
         />
       </div>
 
@@ -50,7 +46,7 @@ export function FilterFields({
           placeholder="Any category"
           value={value.category ?? undefined}
           onChange={(next) => onChange({ category: next ?? null })}
-          options={categories}
+          options={CATEGORY_OPTIONS}
         />
       </div>
 

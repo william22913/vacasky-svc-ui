@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Drawer } from 'antd';
 import { FilterOutlined } from '@ant-design/icons';
-import { fetchTourFilters } from '../../core/services/catalogService';
+import { fetchDestinationOptions } from '../../core/services/catalogService';
 import { formatCount } from '../../core/utils/format';
 import { useApiResource } from '../../helpers/useApiResource';
 import { useDebouncedValue } from '../../helpers/useDebouncedValue';
@@ -12,6 +12,7 @@ import { SearchField } from '../../components/SearchField';
 import { StateBlock } from '../../components/StateBlock';
 import { TourCard, TourCardSkeleton } from '../../components/TourCard';
 import {
+  PAGE_SIZE,
   MAX_SEARCH_LENGTH,
   buildListingSearch,
   countActiveFilters,
@@ -32,8 +33,8 @@ const EMPTY_DRAFT = {
 
 function draftFrom(params) {
   return {
-    destination: params.destination[0] || null,
-    category: params.category[0] || null,
+    destination: params.destination,
+    category: params.category,
     priceMin: params.priceMin,
     priceMax: params.priceMax,
     durationMin: params.durationMin,
@@ -56,7 +57,7 @@ export function TourListingPage() {
   const paramsRef = useRef(params);
   paramsRef.current = params;
 
-  const filters = useApiResource(fetchTourFilters, []);
+  const destinations = useApiResource(fetchDestinationOptions, []);
   const listing = useTourListing(params);
 
   const [keyword, setKeyword] = useState(params.q);
@@ -87,14 +88,12 @@ export function TourListingPage() {
     setKeyword(params.q);
   }, [params.q]);
 
-  const filterDestination = params.destination[0] || null;
-  const filterCategory = params.category[0] || null;
-  const { priceMin, priceMax, durationMin, durationMax, sort } = params;
+  const { destination, category, priceMin, priceMax, durationMin, durationMax, sort } = params;
 
   useEffect(() => {
     setDraft({
-      destination: filterDestination,
-      category: filterCategory,
+      destination,
+      category,
       priceMin,
       priceMax,
       durationMin,
@@ -102,7 +101,7 @@ export function TourListingPage() {
       sort,
     });
     setRangeError(null);
-  }, [filterDestination, filterCategory, priceMin, priceMax, durationMin, durationMax, sort]);
+  }, [destination, category, priceMin, priceMax, durationMin, durationMax, sort]);
 
   useEffect(() => {
     const next = debouncedKeyword.trim().slice(0, MAX_SEARCH_LENGTH);
@@ -110,23 +109,20 @@ export function TourListingPage() {
     updateParams({ q: next }, { replace: true });
   }, [debouncedKeyword, updateParams]);
 
+  // A destination that no longer exists drops back to "any destination".
   useEffect(() => {
-    if (filters.status !== 'success') return;
-    const data = filters.data;
-    const destinationSlugs = new Set(data.destinations.map((item) => item.slug));
-    const categorySlugs = new Set(data.categories.map((item) => item.slug));
-    const destination = params.destination.filter((slug) => destinationSlugs.has(slug));
-    const category = params.category.filter((slug) => categorySlugs.has(slug));
-    if (destination.length !== params.destination.length || category.length !== params.category.length) {
-      updateParams({ destination, category }, { replace: true });
+    if (destinations.status !== 'success' || !destination) return;
+    if (!destinations.data.some((item) => item.slug === destination)) {
+      updateParams({ destination: null }, { replace: true });
     }
-  }, [filters.status, filters.data, params.destination, params.category, updateParams]);
+  }, [destinations.status, destinations.data, destination, updateParams]);
 
+  // The server clamps out-of-range pages; mirror that back into the URL.
   useEffect(() => {
-    const meta = listing.data?.meta;
-    if (listing.status !== 'success' || !meta) return;
-    if (meta.totalPages > 0 && params.page > meta.totalPages) {
-      updateParams({ page: meta.totalPages }, { replace: true });
+    if (listing.status !== 'success' || !listing.data) return;
+    const totalPages = listing.data.totalPages;
+    if (totalPages > 0 && params.page > totalPages) {
+      updateParams({ page: totalPages }, { replace: true });
     }
   }, [listing.status, listing.data, params.page, updateParams]);
 
@@ -139,9 +135,9 @@ export function TourListingPage() {
   const handleFieldChange = (patch) => {
     setDraft((current) => ({ ...current, ...patch }));
     if ('destination' in patch) {
-      updateParams({ destination: patch.destination ? [patch.destination] : [] });
+      updateParams({ destination: patch.destination });
     } else if ('category' in patch) {
-      updateParams({ category: patch.category ? [patch.category] : [] });
+      updateParams({ category: patch.category });
     } else if ('sort' in patch) {
       updateParams({ sort: patch.sort });
     }
@@ -198,8 +194,8 @@ export function TourListingPage() {
     }
     setDrawerRangeError(null);
     updateParams({
-      destination: draftNow.destination ? [draftNow.destination] : [],
-      category: draftNow.category ? [draftNow.category] : [],
+      destination: draftNow.destination,
+      category: draftNow.category,
       priceMin: draftNow.priceMin,
       priceMax: draftNow.priceMax,
       durationMin: draftNow.durationMin,
@@ -217,22 +213,21 @@ export function TourListingPage() {
     });
   };
 
-  const meta = listing.data?.meta;
-  const totalItems = meta?.totalItems ?? 0;
+  const totalItems = listing.data?.total ?? 0;
   const activeFilters = countActiveFilters(params);
   const hasQuery = hasActiveQuery(params);
   const destinationName =
-    params.destination.length === 1
-      ? filters.data?.destinations.find((item) => item.slug === params.destination[0])?.name
+    destination && destinations.status === 'success'
+      ? destinations.data.find((item) => item.slug === destination)?.name
       : null;
   const destinationOnly =
     Boolean(destinationName) &&
     !params.q &&
-    params.category.length === 0 &&
-    params.priceMin == null &&
-    params.priceMax == null &&
-    params.durationMin == null &&
-    params.durationMax == null;
+    !category &&
+    priceMin == null &&
+    priceMax == null &&
+    durationMin == null &&
+    durationMax == null;
 
   let countText = 'Loading tours';
   if (listing.status === 'success') countText = formatCount(totalItems, 'tour');
@@ -269,7 +264,7 @@ export function TourListingPage() {
         <div className="filter-bar filter-bar--desktop">
           <FilterFields
             idPrefix="desktop"
-            filters={filters.data}
+            destinations={destinations.data || []}
             value={draft}
             onChange={handleFieldChange}
             onCommitRange={commitRange}
@@ -281,9 +276,9 @@ export function TourListingPage() {
                 Clear all
               </Button>
             ) : null}
-            {filters.status === 'error' ? (
-              <Button type="link" onClick={filters.retry}>
-                Reload filter options
+            {destinations.status === 'error' ? (
+              <Button type="link" onClick={destinations.retry}>
+                Reload destinations
               </Button>
             ) : null}
           </div>
@@ -321,7 +316,7 @@ export function TourListingPage() {
         <div aria-busy={listing.status === 'loading'}>
           {listing.status === 'loading' ? (
             <div className="card-grid" aria-hidden="true">
-              {Array.from({ length: 12 }, (_, index) => (
+              {Array.from({ length: PAGE_SIZE }, (_, index) => (
                 <TourCardSkeleton key={index} />
               ))}
             </div>
@@ -343,7 +338,7 @@ export function TourListingPage() {
           {listing.status === 'success' && totalItems === 0 && destinationOnly ? (
             <StateBlock
               actions={
-                <Button type="primary" shape="round" onClick={() => updateParams({ destination: [] })}>
+                <Button type="primary" shape="round" onClick={() => updateParams({ destination: null })}>
                   See all tours
                 </Button>
               }
@@ -366,14 +361,16 @@ export function TourListingPage() {
 
           {listing.status === 'success' && totalItems > 0 ? (
             <div className="card-grid">
-              {listing.data.data.map((tour) => (
+              {listing.data.tours.map((tour) => (
                 <TourCard key={tour.slug} tour={tour} />
               ))}
             </div>
           ) : null}
         </div>
 
-        {listing.status === 'success' ? <Pagination meta={meta} onPage={goToPage} /> : null}
+        {listing.status === 'success' ? (
+          <Pagination meta={listing.data} onPage={goToPage} />
+        ) : null}
       </div>
 
       <Drawer
@@ -386,7 +383,7 @@ export function TourListingPage() {
         <div className="drawer-fields">
           <FilterFields
             idPrefix="drawer"
-            filters={filters.data}
+            destinations={destinations.data || []}
             value={drawerDraft}
             onChange={(patch) => setDrawerDraft((current) => ({ ...current, ...patch }))}
             onCommitRange={validateDrawerRange}

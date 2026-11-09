@@ -10,7 +10,8 @@ describe('parseListingParams', () => {
   it('fills safe defaults for an empty query', () => {
     const params = parseListingParams(new URLSearchParams(''));
     expect(params.q).toBe('');
-    expect(params.destination).toEqual([]);
+    expect(params.destination).toBeNull();
+    expect(params.category).toBeNull();
     expect(params.sort).toBe('recommended');
     expect(params.page).toBe(1);
     expect(params.invalidRange).toBe(false);
@@ -35,11 +36,17 @@ describe('parseListingParams', () => {
     expect(params.invalidRange).toBe(true);
   });
 
-  it('drops unknown slug formats but keeps known style slugs', () => {
-    const params = parseListingParams(
-      new URLSearchParams('destination=bali&destination=Not A Slug&destination=bali')
-    );
-    expect(params.destination).toEqual(['bali']);
+  it('falls back to unfiltered when a value is repeated or malformed', () => {
+    expect(
+      parseListingParams(new URLSearchParams('destination=bali&destination=lombok')).destination
+    ).toBeNull();
+    expect(parseListingParams(new URLSearchParams('destination=not a slug')).destination).toBeNull();
+    expect(parseListingParams(new URLSearchParams('category=Sailing')).category).toBeNull();
+    expect(parseListingParams(new URLSearchParams('category=Beach')).category).toBe('Beach');
+  });
+
+  it('keeps a known destination slug', () => {
+    expect(parseListingParams(new URLSearchParams('destination=bali')).destination).toBe('bali');
   });
 });
 
@@ -47,8 +54,8 @@ describe('buildListingSearch', () => {
   it('omits defaults', () => {
     const search = buildListingSearch({
       q: '',
-      destination: [],
-      category: [],
+      destination: null,
+      category: null,
       sort: 'recommended',
       page: 1,
     });
@@ -58,21 +65,21 @@ describe('buildListingSearch', () => {
   it('round-trips an active query', () => {
     const search = buildListingSearch({
       q: 'komodo',
-      destination: ['labuan-bajo'],
-      category: ['sailing'],
+      destination: 'komodo',
+      category: 'Adventure',
       priceMin: 1000000,
       priceMax: 5000000,
       durationMin: 2,
       durationMax: 5,
-      sort: 'price_asc',
+      sort: 'price-asc',
       page: 2,
     });
     const params = parseListingParams(search);
     expect(params.q).toBe('komodo');
-    expect(params.destination).toEqual(['labuan-bajo']);
-    expect(params.category).toEqual(['sailing']);
+    expect(params.destination).toBe('komodo');
+    expect(params.category).toBe('Adventure');
     expect(params.priceMin).toBe(1000000);
-    expect(params.sort).toBe('price_asc');
+    expect(params.sort).toBe('price-asc');
     expect(params.page).toBe(2);
   });
 });

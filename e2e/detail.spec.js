@@ -1,16 +1,16 @@
 import { expect, test } from '@playwright/test';
 
-test('detail shows the tour, itinerary and the enquiry link', async ({ page }, testInfo) => {
-  await page.goto('/tours/komodo-sailing-3d2n');
+test('detail shows the tour, its content sections and the enquiry link', async ({ page }, testInfo) => {
+  await page.goto('/tours/bali-island-escape');
 
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'Komodo National Park Sailing 3D2N'
-  );
-  await expect(page.getByRole('heading', { name: 'Day by day' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Bali Island Escape');
+  await expect(page.getByRole('heading', { name: 'Highlights' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What is included' })).toBeVisible();
-  await expect(page.getByText('Rp 4.750.000').first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Departure dates' })).toBeVisible();
+  await expect(page.getByText('20 November 2026')).toBeVisible();
+  await expect(page.getByText('Rp 4.500.000').first()).toBeVisible();
 
-  const enquiry = page.getByRole('link', { name: 'Enquire on WhatsApp' }).first();
+  const enquiry = page.getByRole('link', { name: 'Enquire about this tour' }).first();
   await expect(enquiry).toHaveAttribute('href', /^https:\/\/wa\.me\//);
   await expect(enquiry).toHaveAttribute('target', '_blank');
 
@@ -21,7 +21,7 @@ test('detail shows the tour, itinerary and the enquiry link', async ({ page }, t
 });
 
 test('gallery thumbnails switch the lead image', async ({ page }) => {
-  await page.goto('/tours/komodo-sailing-3d2n');
+  await page.goto('/tours/bali-island-escape');
   const thumbs = page.getByRole('button', { name: /Show photo/ });
   await expect(thumbs).toHaveCount(3);
   await expect(thumbs.nth(0)).toHaveAttribute('aria-pressed', 'true');
@@ -32,12 +32,12 @@ test('gallery thumbnails switch the lead image', async ({ page }) => {
 });
 
 test('the detail page shows a skeleton, then the tour', async ({ page }, testInfo) => {
-  await page.route(/\/api\/v1\/tours\/[^/?]+$/, async (route) => {
+  await page.route(/\/v1\/tours\/[^/?]+$/, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await route.continue();
   });
 
-  await page.goto('/tours/komodo-sailing-3d2n');
+  await page.goto('/tours/bali-island-escape');
   await expect(page.locator('.detail-page[aria-hidden="true"]')).toBeVisible();
 
   await page.screenshot({
@@ -45,18 +45,20 @@ test('the detail page shows a skeleton, then the tour', async ({ page }, testInf
     fullPage: false,
   });
 
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Komodo National Park');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Bali Island Escape');
 });
 
 test('a detail load failure offers a working retry', async ({ page }) => {
   let failing = true;
-  await page.route(/\/api\/v1\/tours\/[^/?]+$/, async (route) => {
+  await page.route(/\/v1\/tours\/[^/?]+$/, async (route) => {
     if (failing) {
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({
-          error: { code: 'SERVICE_UNAVAILABLE', message: 'down', requestId: 'req-detail-503' },
+          success: false,
+          header: { request_id: 'req-detail-503', version: '1.0.0', timestamp: '2026-11-09T00:00:00Z' },
+          payload: { status: 503, code: 'E-5-VAC-SRV-001', message: 'down' },
         }),
       });
       return;
@@ -64,25 +66,23 @@ test('a detail load failure offers a working retry', async ({ page }) => {
     await route.continue();
   });
 
-  await page.goto('/tours/komodo-sailing-3d2n');
+  await page.goto('/tours/bali-island-escape');
   await expect(page.getByText("We couldn't load this tour. Please try again.")).toBeVisible();
 
   failing = false;
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Komodo National Park');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Bali Island Escape');
 });
 
 test('a missing tour shows the tour not found page', async ({ page }, testInfo) => {
-  await page.route(/\/api\/v1\/tours\/[^/?]+$/, (route) =>
+  await page.route(/\/v1\/tours\/[^/?]+$/, (route) =>
     route.fulfill({
       status: 404,
       contentType: 'application/json',
       body: JSON.stringify({
-        error: {
-          code: 'TOUR_NOT_FOUND',
-          message: 'No tour with that slug.',
-          requestId: 'req-detail-404',
-        },
+        success: false,
+        header: { request_id: 'req-detail-404', version: '1.0.0', timestamp: '2026-11-09T00:00:00Z' },
+        payload: { status: 404, code: 'TOUR_NOT_FOUND', message: 'No tour with that slug.' },
       }),
     })
   );

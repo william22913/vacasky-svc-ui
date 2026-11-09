@@ -5,6 +5,6 @@ services:
     ports:
       - '8080:80'
     environment:
-      # Same-origin /api requests are proxied here by nginx.
+      # Same-origin /v1 requests are proxied here by nginx.
       API_UPSTREAM: ${API_UPSTREAM:-http://api:8080}
     restart: unless-stopped

@@ -1,327 +1,220 @@
-// Generated from the approved API contract. Do not edit; regenerate when the contract changes.
+// Generated from the approved API contract (version 3). Do not edit; regenerate when the contract changes.
 import http from 'node:http';
+
 const routes = [
   {
-    "method": "GET",
-    "path": "/api/v1/home",
-    "status": 200,
-    "body": {
-      "hero": {
-        "heading": "Create unforgettable memories with Vacasky",
-        "subheading": "Small-group tours across Indonesia, led by guides who live there.",
-        "image": {
-          "url": "https://cdn.vacasky.example/images/hero-komodo.jpg",
-          "alt": "A wooden phinisi boat sailing between the islands of Komodo National Park at golden hour"
-        }
+    method: 'GET',
+    path: '/v1/home/featured-tours',
+    status: 200,
+    body: {
+      success: true,
+      header: {
+        request_id: 'req_01JB7Z9K4Q8X2M6T3R5V1W0P',
+        version: '1.0.0',
+        timestamp: '2026-11-09T00:00:00.000000Z',
       },
-      "featuredDestinations": [
-        {
-          "slug": "bali",
-          "name": "Bali",
-          "country": "Indonesia",
-          "summary": "Rice terraces at dawn, temple ceremonies and warm surf on the south coast.",
-          "image": {
-            "url": "https://cdn.vacasky.example/images/destination-bali.jpg",
-            "alt": "Green rice terraces stepping down a hillside in Ubud, Bali"
+      payload: {
+        tours: [
+          {
+            slug: 'bali-island-escape',
+            name: 'Bali Island Escape',
+            destination: { slug: 'bali', name: 'Bali' },
+            category: 'Beach',
+            duration_days: 5,
+            price_per_person: 4500000,
+            image_url: 'https://cdn.example/tours/bali-1.jpg',
+            image_alt: 'Bali Island Escape beach at sunset',
           },
-          "tourCount": 14
-        },
-        {
-          "slug": "labuan-bajo",
-          "name": "Labuan Bajo",
-          "country": "Indonesia",
-          "summary": "The harbour gateway to Komodo National Park and its pink beaches.",
-          "image": {
-            "url": "https://cdn.vacasky.example/images/destination-labuan-bajo.jpg",
-            "alt": "Turquoise water and a wooden jetty in Labuan Bajo harbour"
+          {
+            slug: 'komodo-sailing-adventure',
+            name: 'Komodo Sailing Adventure',
+            destination: { slug: 'komodo', name: 'Komodo' },
+            category: 'Adventure',
+            duration_days: 3,
+            price_per_person: 6200000,
+            image_url: 'https://cdn.example/tours/komodo-1.jpg',
+            image_alt: 'A phinisi boat sailing off Komodo Island',
           },
-          "tourCount": 9
-        }
-      ],
-      "featuredTours": [
-        {
-          "slug": "komodo-sailing-3d2n",
-          "title": "Komodo National Park Sailing 3D2N",
-          "summary": "Three days aboard a traditional phinisi, island-hopping from Padar to Komodo.",
-          "destination": {
-            "slug": "labuan-bajo",
-            "name": "Labuan Bajo",
-            "country": "Indonesia"
-          },
-          "category": {
-            "slug": "sailing",
-            "name": "Sailing"
-          },
-          "durationDays": 3,
-          "price": {
-            "amount": 4750000,
-            "currency": "IDR"
-          },
-          "image": {
-            "url": "https://cdn.vacasky.example/images/tour-komodo-sailing.jpg",
-            "alt": "The deck of a phinisi boat with Padar Island in the background"
-          },
-          "badges": [
-            "best_seller"
-          ]
-        },
-        {
-          "slug": "bromo-sunrise-trek-2d1n",
-          "title": "Mount Bromo Sunrise Trek 2D1N",
-          "summary": "A pre-dawn jeep ride to the viewpoint, then a walk across the sand sea to the crater rim.",
-          "destination": {
-            "slug": "bromo",
-            "name": "Bromo",
-            "country": "Indonesia"
-          },
-          "category": {
-            "slug": "nature",
-            "name": "Nature"
-          },
-          "durationDays": 2,
-          "price": {
-            "amount": 1250000,
-            "currency": "IDR"
-          },
-          "image": {
-            "url": "https://cdn.vacasky.example/images/tour-bromo-sunrise.jpg",
-            "alt": "Mount Bromo smoking at sunrise seen from the Penanjakan viewpoint"
-          },
-          "badges": []
-        }
-      ]
-    }
+        ],
+      },
+    },
   },
   {
-    "method": "GET",
-    "path": "/api/v1/tours",
-    "status": 200,
-    "body": {
-      "data": [
-        {
-          "slug": "komodo-sailing-3d2n",
-          "title": "Komodo National Park Sailing 3D2N",
-          "summary": "Three days aboard a traditional phinisi, island-hopping from Padar to Komodo.",
-          "destination": {
-            "slug": "labuan-bajo",
-            "name": "Labuan Bajo",
-            "country": "Indonesia"
+    method: 'GET',
+    path: '/v1/home/featured-destinations',
+    status: 200,
+    body: {
+      success: true,
+      header: {
+        request_id: 'req_01JB7Z9K4Q8X2M6T3R5V1W0Q',
+        version: '1.0.0',
+        timestamp: '2026-11-09T00:00:00.000000Z',
+      },
+      payload: {
+        destinations: [
+          {
+            slug: 'komodo',
+            name: 'Komodo',
+            image_url: 'https://cdn.example/destinations/komodo.jpg',
+            image_alt: 'Komodo island coastline',
           },
-          "category": {
-            "slug": "sailing",
-            "name": "Sailing"
+          {
+            slug: 'bali',
+            name: 'Bali',
+            image_url: 'https://cdn.example/destinations/bali.jpg',
+            image_alt: 'Rice terraces in Bali',
           },
-          "durationDays": 3,
-          "price": {
-            "amount": 4750000,
-            "currency": "IDR"
-          },
-          "image": {
-            "url": "https://cdn.vacasky.example/images/tour-komodo-sailing.jpg",
-            "alt": "The deck of a phinisi boat with Padar Island in the background"
-          },
-          "badges": [
-            "best_seller"
-          ]
-        },
-        {
-          "slug": "raja-ampat-dive-6d5n",
-          "title": "Raja Ampat Dive Expedition 6D5N",
-          "summary": "Six days of reefs, manta rays and island walks from a small dive resort in Kri.",
-          "destination": {
-            "slug": "raja-ampat",
-            "name": "Raja Ampat",
-            "country": "Indonesia"
-          },
-          "category": {
-            "slug": "nature",
-            "name": "Nature"
-          },
-          "durationDays": 6,
-          "price": {
-            "amount": 12500000,
-            "currency": "IDR"
-          },
-          "image": {
-            "url": "https://cdn.vacasky.example/images/tour-raja-ampat.jpg",
-            "alt": "A manta ray gliding over a coral reef in the Raja Ampat archipelago"
-          },
-          "badges": []
-        }
-      ],
-      "meta": {
-        "page": 1,
-        "pageSize": 12,
-        "totalItems": 2,
-        "totalPages": 1
-      }
-    }
+        ],
+      },
+    },
   },
   {
-    "method": "GET",
-    "path": "/api/v1/tours/filters",
-    "status": 200,
-    "body": {
-      "destinations": [
-        {
-          "slug": "bali",
-          "name": "Bali",
-          "country": "Indonesia",
-          "summary": "Rice terraces at dawn, temple ceremonies and warm surf on the south coast.",
-          "image": {
-            "url": "https://cdn.vacasky.example/images/destination-bali.jpg",
-            "alt": "Green rice terraces stepping down a hillside in Ubud, Bali"
-          },
-          "tourCount": 14
-        },
-        {
-          "slug": "labuan-bajo",
-          "name": "Labuan Bajo",
-          "country": "Indonesia",
-          "summary": "The harbour gateway to Komodo National Park and its pink beaches.",
-          "image": {
-            "url": "https://cdn.vacasky.example/images/destination-labuan-bajo.jpg",
-            "alt": "Turquoise water and a wooden jetty in Labuan Bajo harbour"
-          },
-          "tourCount": 9
-        }
-      ],
-      "categories": [
-        {
-          "slug": "sailing",
-          "name": "Sailing",
-          "tourCount": 4
-        },
-        {
-          "slug": "nature",
-          "name": "Nature",
-          "tourCount": 6
-        },
-        {
-          "slug": "city",
-          "name": "City",
-          "tourCount": 3
-        },
-        {
-          "slug": "seasonal",
-          "name": "Seasonal",
-          "tourCount": 2
-        }
-      ],
-      "priceRange": {
-        "minAmount": 850000,
-        "maxAmount": 18750000,
-        "currency": "IDR"
+    method: 'GET',
+    path: '/v1/tours',
+    status: 200,
+    body: {
+      success: true,
+      header: {
+        request_id: 'req_01JB7Z9K4Q8X2M6T3R5V1W0R',
+        version: '1.0.0',
+        timestamp: '2026-11-09T00:00:00.000000Z',
       },
-      "durationRange": {
-        "minDays": 1,
-        "maxDays": 9
-      }
-    }
+      payload: {
+        tours: [
+          {
+            slug: 'bali-island-escape',
+            name: 'Bali Island Escape',
+            destination: { slug: 'bali', name: 'Bali' },
+            category: 'Beach',
+            duration_days: 5,
+            price_per_person: 4500000,
+            image_url: 'https://cdn.example/tours/bali-1.jpg',
+            image_alt: 'Bali Island Escape beach at sunset',
+          },
+          {
+            slug: 'lombok-mountain-trek',
+            name: 'Lombok Mountain Trek',
+            destination: { slug: 'lombok', name: 'Lombok' },
+            category: 'Mountain',
+            duration_days: 4,
+            price_per_person: 3800000,
+            image_url: 'https://cdn.example/tours/lombok-1.jpg',
+            image_alt: 'Mount Rinjani seen from a ridge in Lombok',
+          },
+        ],
+        page: 1,
+        page_size: 12,
+        total: 30,
+        total_pages: 3,
+      },
+    },
   },
   {
-    "method": "GET",
-    "path": "/api/v1/tours/{slug}",
-    "status": 200,
-    "body": {
-      "slug": "komodo-sailing-3d2n",
-      "title": "Komodo National Park Sailing 3D2N",
-      "summary": "Three days aboard a traditional phinisi, island-hopping from Padar to Komodo.",
-      "description": "Sail from Labuan Bajo across the Komodo archipelago on a wooden\nphinisi. The trip is built for small groups of up to twelve\nguests, with two nights on board, freshly cooked meals and\nsnorkelling stops between the islands. Your guide is a licensed\nKomodo ranger who grew up on Flores.\n",
-      "destination": {
-        "slug": "labuan-bajo",
-        "name": "Labuan Bajo",
-        "country": "Indonesia"
+    method: 'GET',
+    path: '/v1/tours/{slug}',
+    status: 200,
+    body: {
+      success: true,
+      header: {
+        request_id: 'req_01JB7Z9K4Q8X2M6T3R5V1W0S',
+        version: '1.0.0',
+        timestamp: '2026-11-09T00:00:00.000000Z',
       },
-      "category": {
-        "slug": "sailing",
-        "name": "Sailing"
+      payload: {
+        slug: 'bali-island-escape',
+        name: 'Bali Island Escape',
+        destination: { slug: 'bali', name: 'Bali' },
+        category: 'Beach',
+        duration_days: 5,
+        price_per_person: 4500000,
+        description: "Five days across Bali's south coast, from Uluwatu to Ubud.",
+        highlights: [
+          'Uluwatu temple at sunset',
+          'Rice terraces in Ubud',
+          'Snorkelling at Nusa Penida',
+        ],
+        included: [
+          'Airport transfer',
+          'Four nights of accommodation',
+          'Daily breakfast',
+          'Licensed local guide',
+        ],
+        images: [
+          {
+            url: 'https://cdn.example/tours/bali-1.jpg',
+            alt: 'Bali Island Escape beach at sunset',
+          },
+          { url: 'https://cdn.example/tours/bali-2.jpg', alt: 'Rice terraces in Ubud' },
+          {
+            url: 'https://cdn.example/tours/bali-3.jpg',
+            alt: 'Snorkellers above a coral reef at Nusa Penida',
+          },
+        ],
+        departure_dates: ['2026-11-20', '2026-12-04', '2026-12-18'],
       },
-      "durationDays": 3,
-      "price": {
-        "amount": 4750000,
-        "currency": "IDR"
-      },
-      "badges": [
-        "best_seller"
-      ],
-      "images": [
-        {
-          "url": "https://cdn.vacasky.example/images/tour-komodo-sailing-1.jpg",
-          "alt": "The deck of a phinisi boat with Padar Island in the background"
-        },
-        {
-          "url": "https://cdn.vacasky.example/images/tour-komodo-sailing-2.jpg",
-          "alt": "A Komodo dragon walking along a sandy track"
-        },
-        {
-          "url": "https://cdn.vacasky.example/images/tour-komodo-sailing-3.jpg",
-          "alt": "Snorkellers above a coral reef in clear turquoise water"
-        }
-      ],
-      "highlights": [
-        "Sunrise from the Padar Island viewpoint",
-        "Snorkelling at Pink Beach and Manta Point",
-        "Komodo dragons with a licensed ranger"
-      ],
-      "itinerary": [
-        {
-          "day": 1,
-          "title": "Labuan Bajo to Kelor Island",
-          "description": "Board the boat at midday, sail to Kelor for the first snorkel and a short hike, then dinner on deck."
-        },
-        {
-          "day": 2,
-          "title": "Padar, Pink Beach and Komodo Island",
-          "description": "Pre-dawn hike on Padar, snorkelling at Pink Beach and an afternoon ranger-led walk on Komodo Island."
-        },
-        {
-          "day": 3,
-          "title": "Manta Point and return",
-          "description": "Morning snorkel with manta rays at Manta Point, lunch on board and return to Labuan Bajo by 14:00."
-        }
-      ],
-      "inclusions": [
-        "Two nights in an air-conditioned cabin",
-        "All meals, drinking water and coffee",
-        "Licensed guide and Komodo ranger fees",
-        "Snorkelling equipment and life jackets"
-      ],
-      "exclusions": [
-        "Flights to and from Labuan Bajo",
-        "Travel insurance",
-        "Personal expenses and tips"
-      ],
-      "enquiry": {
-        "label": "Enquire on WhatsApp",
-        "url": "https://wa.me/6281234567890?text=Hi%20Vacasky%2C%20I%20would%20like%20to%20enquire%20about%20the%20Komodo%20National%20Park%20Sailing%203D2N%20tour."
-      }
-    }
+    },
   },
   {
-    "method": "GET",
-    "path": "/healthz",
-    "status": 200,
-    "body": {
-      "status": "ok",
-      "version": "1.0.0",
-      "checks": {
-        "database": "ok"
-      }
-    }
-  }
+    method: 'GET',
+    path: '/v1/destinations',
+    status: 200,
+    body: {
+      success: true,
+      header: {
+        request_id: 'req_01JB7Z9K4Q8X2M6T3R5V1W0T',
+        version: '1.0.0',
+        timestamp: '2026-11-09T00:00:00.000000Z',
+      },
+      payload: {
+        destinations: [
+          { slug: 'bali', name: 'Bali' },
+          { slug: 'flores', name: 'Flores' },
+          { slug: 'jakarta', name: 'Jakarta' },
+          { slug: 'komodo', name: 'Komodo' },
+          { slug: 'lombok', name: 'Lombok' },
+          { slug: 'yogyakarta', name: 'Yogyakarta' },
+        ],
+      },
+    },
+  },
+  {
+    method: 'GET',
+    path: '/v1/health',
+    status: 200,
+    body: { status: 'UP', db: 'UP' },
+  },
 ];
-const rx = (p) => new RegExp('^' + p.split('/').map((s) => (/^\{[^}]+\}$/.test(s) ? '[^/]+' : s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))).join('/') + '/?$');
-const compiled = routes.map((r) => ({ ...r, re: rx(r.path) }));
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const rx = (path) =>
+  new RegExp(
+    '^' +
+      path
+        .split('/')
+        .map((segment) => (/^\{[^}]+\}$/.test(segment) ? '[^/]+' : escapeRegExp(segment)))
+        .join('/') +
+      '/?$'
+  );
+
+const compiled = routes.map((route) => ({ ...route, re: rx(route.path) }));
 const port = Number(process.argv[2] || 4010);
-http.createServer((req, res) => {
-  const pathname = (req.url || '/').split('?')[0];
-  res.setHeader('access-control-allow-origin', '*');
-  res.setHeader('access-control-allow-headers', '*');
-  res.setHeader('access-control-allow-methods', '*');
-  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-  const hit = compiled.find((r) => r.method === req.method && r.re.test(pathname));
-  if (!hit) { res.writeHead(404, { 'content-type': 'application/json' }); return res.end('{"error":"not in contract"}'); }
-  res.writeHead(hit.status, { 'content-type': 'application/json' });
-  res.end(hit.body === null ? '' : JSON.stringify(hit.body));
-}).listen(port, () => console.log('mock server on :' + port));
+
+http
+  .createServer((req, res) => {
+    const pathname = (req.url || '/').split('?')[0];
+    res.setHeader('access-control-allow-origin', '*');
+    res.setHeader('access-control-allow-headers', '*');
+    res.setHeader('access-control-allow-methods', '*');
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      return res.end();
+    }
+    const hit = compiled.find((route) => route.method === req.method && route.re.test(pathname));
+    if (!hit) {
+      res.writeHead(404, { 'content-type': 'application/json' });
+      return res.end('{"error":"not in contract"}');
+    }
+    res.writeHead(hit.status, { 'content-type': 'application/json' });
+    res.end(hit.body === null ? '' : JSON.stringify(hit.body));
+  })
+  .listen(port, () => console.log('mock server on :' + port));

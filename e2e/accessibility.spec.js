@@ -137,8 +137,8 @@ function audit() {
 
 const PAGES = [
   { name: 'home', path: '/', ready: 'Featured tours' },
-  { name: 'listing', path: '/tours', ready: '2 tours' },
-  { name: 'detail', path: '/tours/komodo-sailing-3d2n', ready: 'Day by day' },
+  { name: 'listing', path: '/tours', ready: '30 tours' },
+  { name: 'detail', path: '/tours/bali-island-escape', ready: 'Highlights' },
 ];
 
 for (const { name, path, ready } of PAGES) {

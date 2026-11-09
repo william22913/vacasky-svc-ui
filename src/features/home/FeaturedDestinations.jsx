@@ -21,8 +21,8 @@ export function FeaturedDestinations({ status, destinations, onRetry }) {
 
         {status === 'loading' ? (
           <div className="card-grid" aria-hidden="true">
-            {Array.from({ length: 3 }, (_, index) => (
-              <div className="skeleton" key={index} style={{ aspectRatio: '4 / 3', borderRadius: 'var(--radius-lg)' }} />
+            {Array.from({ length: 6 }, (_, index) => (
+              <div className="skeleton skeleton-card" key={index} style={{ aspectRatio: '4 / 3' }} />
             ))}
           </div>
         ) : null}

@@ -1,24 +1,22 @@
 import { expect, test } from '@playwright/test';
 
-const HOME_ERROR = {
-  error: {
-    code: 'INTERNAL_ERROR',
-    message: 'The homepage feed could not be read.',
-    requestId: 'req-home-1',
-  },
+const errorEnvelope = {
+  success: false,
+  header: { request_id: 'req-home-1', version: '1.0.0', timestamp: '2026-11-09T00:00:00.000000Z' },
+  payload: { status: 500, code: 'E-5-VAC-SRV-001', message: 'internal' },
 };
 
 test('home shows the hero, featured tours and featured destinations', async ({ page }, testInfo) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'Create unforgettable memories'
-  );
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toContainText('Memories');
+  await expect(heading).toContainText('Vacasky');
+  await expect(page.locator('.hero__sub')).toContainText('Small-group tours across Indonesia');
+
   await expect(page.getByRole('heading', { name: 'Featured tours' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Featured destinations' })).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Bali', exact: true })).toBeVisible();
 
   await page.screenshot({
@@ -30,11 +28,9 @@ test('home shows the hero, featured tours and featured destinations', async ({ p
 test('a featured tour opens its page and a destination opens its listing', async ({ page }) => {
   await page.goto('/');
 
-  await page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' }).click();
-  await expect(page).toHaveURL(/\/tours\/komodo-sailing-3d2n$/);
-  await expect(page.getByRole('heading', { level: 1 })).toContainText(
-    'Komodo National Park Sailing 3D2N'
-  );
+  await page.getByRole('link', { name: 'Bali Island Escape' }).click();
+  await expect(page).toHaveURL(/\/tours\/bali-island-escape$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Bali Island Escape');
 
   await page.goBack();
   const bali = page.getByRole('link', { name: 'Bali', exact: true });
@@ -43,35 +39,36 @@ test('a featured tour opens its page and a destination opens its listing', async
   await expect(page).toHaveURL(/\/tours\?destination=bali$/);
 });
 
-test('home shows six skeletons while the feed loads', async ({ page }, testInfo) => {
-  await page.route('**/api/v1/home', async (route) => {
+test('home shows six skeletons per section while the feed loads', async ({ page }, testInfo) => {
+  await page.route('**/v1/home/**', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await route.continue();
   });
 
   await page.goto('/');
-  await expect(page.locator('.skeleton-card')).toHaveCount(6);
+  await expect(page.locator('.skeleton-card')).toHaveCount(12);
 
   await page.screenshot({
     path: `docs/FEAT-001/evidence/home-loading-${testInfo.project.name}.png`,
     fullPage: false,
   });
 
-  await expect(
-    page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
 });
 
 test('home with no featured content still renders and offers the catalog', async ({ page }) => {
-  const response = await page.request.get('http://localhost:4010/api/v1/home');
-  const body = await response.json();
-  await page.route('**/api/v1/home', (route) =>
-    route.fulfill({
+  await page.route('**/v1/home/**', (route) => {
+    const isTours = route.request().url().endsWith('featured-tours');
+    return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ...body, featuredTours: [], featuredDestinations: [] }),
-    })
-  );
+      body: JSON.stringify({
+        success: true,
+        header: { request_id: 'req-empty', version: '1.0.0', timestamp: '2026-11-09T00:00:00Z' },
+        payload: isTours ? { tours: [] } : { destinations: [] },
+      }),
+    });
+  });
 
   await page.goto('/');
 
@@ -85,27 +82,36 @@ test('home with no featured content still renders and offers the catalog', async
 });
 
 test('home never shows more than six featured tours or destinations', async ({ page }) => {
-  const response = await page.request.get('http://localhost:4010/api/v1/home');
-  const body = await response.json();
+  const toursBody = await (
+    await page.request.get('http://localhost:4010/v1/home/featured-tours')
+  ).json();
+  const destinationsBody = await (
+    await page.request.get('http://localhost:4010/v1/home/featured-destinations')
+  ).json();
+
   const sevenTours = Array.from({ length: 7 }, (_, index) => ({
-    ...body.featuredTours[0],
+    ...toursBody.payload.tours[0],
     slug: `sample-tour-${index + 1}`,
-    title: `Sample featured tour ${index + 1}`,
+    name: `Sample featured tour ${index + 1}`,
   }));
   const sevenDestinations = Array.from({ length: 7 }, (_, index) => ({
-    ...body.featuredDestinations[0],
+    ...destinationsBody.payload.destinations[0],
     slug: `sample-destination-${index + 1}`,
     name: `Sample destination ${index + 1}`,
   }));
-  await page.route('**/api/v1/home', (route) =>
+
+  await page.route('**/v1/home/featured-tours', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        ...body,
-        featuredTours: sevenTours,
-        featuredDestinations: sevenDestinations,
-      }),
+      body: JSON.stringify({ ...toursBody, payload: { tours: sevenTours } }),
+    })
+  );
+  await page.route('**/v1/home/featured-destinations', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ...destinationsBody, payload: { destinations: sevenDestinations } }),
     })
   );
 
@@ -128,9 +134,13 @@ test('home keeps the hero and recovers a failed featured section on retry', asyn
   page,
 }, testInfo) => {
   let failing = true;
-  await page.route('**/api/v1/home', async (route) => {
+  await page.route('**/v1/home/featured-tours', async (route) => {
     if (failing) {
-      await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify(HOME_ERROR) });
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify(errorEnvelope),
+      });
       return;
     }
     await route.continue();
@@ -147,9 +157,7 @@ test('home keeps the hero and recovers a failed featured section on retry', asyn
   });
 
   failing = false;
-  await page.getByRole('button', { name: 'Retry' }).first().click();
+  await page.getByRole('button', { name: 'Retry' }).click();
 
-  await expect(
-    page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
 });

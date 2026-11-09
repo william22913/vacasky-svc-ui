@@ -1,28 +1,26 @@
-import { fetchHome } from '../../core/services/catalogService';
+import {
+  fetchFeaturedDestinations,
+  fetchFeaturedTours,
+} from '../../core/services/catalogService';
 import { useApiResource } from '../../helpers/useApiResource';
 import { FeaturedDestinations } from './FeaturedDestinations';
 import { FeaturedTours } from './FeaturedTours';
 import { HomeHero } from './HomeHero';
 
-// The hero is painted before data arrives so the first screen never shifts.
-// Values mirror the contract's documented hero example.
-const FALLBACK_HERO = {
-  heading: 'Create unforgettable memories with Vacasky',
-  subheading: 'Small-group tours across Indonesia, led by guides who live there.',
-};
-
 export function HomePage() {
-  const { status, data, retry } = useApiResource(fetchHome, []);
+  // Two contract endpoints, two independent sections: one can fail and retry
+  // without replacing the hero or the other section.
+  const tours = useApiResource(fetchFeaturedTours, []);
+  const destinations = useApiResource(fetchFeaturedDestinations, []);
 
   return (
     <>
-      <HomeHero hero={data?.hero || FALLBACK_HERO} />
-      {/* The contract asks for at most six of each; never render more. */}
-      <FeaturedTours status={status} tours={data?.featuredTours?.slice(0, 6) || []} onRetry={retry} />
+      <HomeHero />
+      <FeaturedTours status={tours.status} tours={tours.data || []} onRetry={tours.retry} />
       <FeaturedDestinations
-        status={status}
-        destinations={data?.featuredDestinations?.slice(0, 6) || []}
-        onRetry={retry}
+        status={destinations.status}
+        destinations={destinations.data || []}
+        onRetry={destinations.retry}
       />
     </>
   );

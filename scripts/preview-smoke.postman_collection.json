@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "vacasky-svc-ui preview smoke",
-    "description": "Checks the built image: nginx serves the SPA shell, React Router routes fall back to it, the PWA manifest is published and /api is proxied.",
+    "description": "Checks the built image: nginx serves the SPA shell, React Router routes fall back to it, the PWA manifest is published and /v1 is proxied.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [{ "key": "baseUrl", "value": "http://web:80" }],
@@ -23,7 +23,7 @@
     },
     {
       "name": "spa fallback for a detail route",
-      "request": { "method": "GET", "url": "{{baseUrl}}/tours/komodo-sailing-3d2n" },
+      "request": { "method": "GET", "url": "{{baseUrl}}/tours/bali-island-escape" },
       "event": [
         {
           "listen": "test",
@@ -51,13 +51,28 @@
     },
     {
       "name": "api proxy reaches the service",
-      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tours" },
+      "request": { "method": "GET", "url": "{{baseUrl}}/v1/tours" },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('api reachable through nginx', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data).to.be.an('array'); });"
+              "pm.test('envelope succeeds', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().success).to.eql(true); });",
+              "pm.test('tours arrive as an array', () => { pm.expect(pm.response.json().payload.tours).to.be.an('array'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "api proxy reaches the health route",
+      "request": { "method": "GET", "url": "{{baseUrl}}/v1/health" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('health is up', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('UP'); });"
             ]
           }
         }

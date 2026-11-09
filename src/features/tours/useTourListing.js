@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchTours } from '../../core/services/catalogService';
-import { PAGE_SIZE } from './listingParams';
 
 export function useTourListing(params) {
   const [state, setState] = useState({ status: 'loading', data: null, error: null });
@@ -37,7 +36,7 @@ export function useTourListing(params) {
 
     setState((previous) => ({ status: 'loading', data: previous.data, error: null }));
 
-    fetchTours({ ...requestRef.current, pageSize: PAGE_SIZE }, controller.signal)
+    fetchTours(requestRef.current, controller.signal)
       .then((data) => {
         if (requestId === sequence.current) setState({ status: 'success', data, error: null });
       })

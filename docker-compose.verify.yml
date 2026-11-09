@@ -1,5 +1,5 @@
 # Small preview stack used to verify the built image end to end: nginx serves
-# the SPA and proxies /api to the contract mock. Not part of the deliverable.
+# the SPA and proxies /v1 to the contract mock. Not part of the deliverable.
 services:
   web:
     environment:

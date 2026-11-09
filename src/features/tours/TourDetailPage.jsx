@@ -1,14 +1,28 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from 'antd';
-import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import { CalendarOutlined, CheckCircleFilled, ClockCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { fetchTour } from '../../core/services/catalogService';
-import { badgeLabel, formatDuration, formatIdr, paragraphsOf } from '../../core/utils/format';
+import { formatDate, formatDuration, formatIdr, paragraphsOf } from '../../core/utils/format';
 import { useApiResource } from '../../helpers/useApiResource';
 import { CategoryTag } from '../../components/CategoryTag';
 import { MediaImage } from '../../components/MediaImage';
 import { StateBlock } from '../../components/StateBlock';
 import { TourNotFoundPage } from '../state/StatePages';
+
+// The contract has no enquiry object, so the link is built from the site's
+// own contact settings. WhatsApp first, email second.
+const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '');
+const contactEmail = import.meta.env.VITE_CONTACT_EMAIL || '';
+
+function enquiryUrl(tour) {
+  const message = `Hi Vacasky, I would like to enquire about ${tour.name}.`;
+  if (whatsappNumber) return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+  if (contactEmail) {
+    return `mailto:${contactEmail}?subject=${encodeURIComponent(`Enquiry: ${tour.name}`)}`;
+  }
+  return '';
+}
 
 function Gallery({ images, resetKey }) {
   const [active, setActive] = useState(0);
@@ -44,8 +58,8 @@ function Gallery({ images, resetKey }) {
   );
 }
 
-function EnquiryButton({ enquiry, className }) {
-  const url = enquiry?.url || '';
+function EnquiryButton({ tour, className }) {
+  const url = enquiryUrl(tour);
   if (!/^(https:\/\/|mailto:)/.test(url)) return null;
 
   return (
@@ -57,8 +71,9 @@ function EnquiryButton({ enquiry, className }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
+      icon={<SendOutlined />}
     >
-      {enquiry.label || 'Enquire about this tour'}
+      Enquire about this tour
     </Button>
   );
 }
@@ -113,41 +128,41 @@ export function TourDetailPage() {
   }
 
   const tour = data;
-  const badge = badgeLabel(tour.badges?.[0]);
   const paragraphs = paragraphsOf(tour.description);
+  const images = tour.images.length > 0 ? tour.images : tour.image?.url ? [tour.image] : [];
+  const departureDates = tour.departureDates.map(formatDate).filter(Boolean);
 
   return (
     <div className="container detail-page">
       <header className="detail-head">
         <div className="detail-head__tags">
-          {badge ? <span className="tag tag--accent">{badge}</span> : null}
-          <CategoryTag>{tour.category?.name}</CategoryTag>
+          <CategoryTag>{tour.category}</CategoryTag>
         </div>
-        <h1 className="detail-head__title">{tour.title}</h1>
-        <p className="detail-head__summary">{tour.summary}</p>
+        <h1 className="detail-head__title">{tour.name}</h1>
         <div className="detail-meta">
           <Link to={`/tours?destination=${encodeURIComponent(tour.destination.slug)}`}>
             {tour.destination.name}
           </Link>
-          <span>{formatDuration(tour.durationDays)}</span>
-          <span>{tour.destination.country}</span>
+          <span>
+            <ClockCircleOutlined aria-hidden="true" /> {formatDuration(tour.durationDays)}
+          </span>
         </div>
         <p className="detail-price">
-          <strong>{formatIdr(tour.price.amount)}</strong>
+          <strong>{formatIdr(tour.pricePerPerson)}</strong>
           <span>per person</span>
         </p>
       </header>
 
       <div className="detail-layout">
         <div className="detail-aside">
-          <Gallery images={tour.images} resetKey={tour.slug} />
+          {images.length > 0 ? <Gallery images={images} resetKey={tour.slug} /> : null}
           <div className="enquiry-card">
             <p className="enquiry-card__price">From</p>
-            <p className="enquiry-card__amount">{formatIdr(tour.price.amount)}</p>
+            <p className="enquiry-card__amount">{formatIdr(tour.pricePerPerson)}</p>
             <p className="enquiry-card__note">
               Tell us your dates and group size. No payment is taken here.
             </p>
-            <EnquiryButton enquiry={tour.enquiry} />
+            <EnquiryButton tour={tour} />
           </div>
         </div>
 
@@ -177,26 +192,11 @@ export function TourDetailPage() {
             </section>
           ) : null}
 
-          {tour.itinerary.length > 0 ? (
-            <section className="detail-section">
-              <h2>Day by day</h2>
-              <ol className="itinerary">
-                {tour.itinerary.map((day) => (
-                  <li className="itinerary__day" key={day.day}>
-                    <span className="itinerary__label">Day {day.day}</span>
-                    <span className="itinerary__title">{day.title}</span>
-                    <span className="itinerary__text">{day.description}</span>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : null}
-
-          {tour.inclusions.length > 0 ? (
+          {tour.included.length > 0 ? (
             <section className="detail-section">
               <h2>What is included</h2>
               <ul className="detail-list detail-list--included">
-                {tour.inclusions.map((item) => (
+                {tour.included.map((item) => (
                   <li key={item}>
                     <CheckCircleFilled aria-hidden="true" />
                     <span>{item}</span>
@@ -206,14 +206,14 @@ export function TourDetailPage() {
             </section>
           ) : null}
 
-          {tour.exclusions.length > 0 ? (
+          {departureDates.length > 0 ? (
             <section className="detail-section">
-              <h2>Not included</h2>
-              <ul className="detail-list detail-list--excluded">
-                {tour.exclusions.map((item) => (
-                  <li key={item}>
-                    <CloseCircleFilled aria-hidden="true" />
-                    <span>{item}</span>
+              <h2>Departure dates</h2>
+              <ul className="detail-list detail-list--departures">
+                {departureDates.map((date) => (
+                  <li key={date}>
+                    <CalendarOutlined aria-hidden="true" />
+                    <span>{date}</span>
                   </li>
                 ))}
               </ul>
@@ -224,10 +224,10 @@ export function TourDetailPage() {
 
       <div className="enquiry-bar">
         <p className="enquiry-bar__price">
-          {formatIdr(tour.price.amount)}
+          {formatIdr(tour.pricePerPerson)}
           <span>per person</span>
         </p>
-        <EnquiryButton enquiry={tour.enquiry} />
+        <EnquiryButton tour={tour} />
       </div>
     </div>
   );

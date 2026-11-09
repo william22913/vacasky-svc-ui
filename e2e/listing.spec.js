@@ -1,15 +1,26 @@
 import { expect, test } from '@playwright/test';
 
-const EMPTY_PAGE = { data: [], meta: { page: 1, pageSize: 12, totalItems: 0, totalPages: 0 } };
+const TOURS_REQUEST = /\/v1\/tours(\?|$)/;
+
+const emptyPage = {
+  success: true,
+  header: { request_id: 'req-empty', version: '1.0.0', timestamp: '2026-11-09T00:00:00Z' },
+  payload: { tours: [], page: 1, page_size: 12, total: 0, total_pages: 0 },
+};
+
+const errorEnvelope = {
+  success: false,
+  header: { request_id: 'req-list-1', version: '1.0.0', timestamp: '2026-11-09T00:00:00Z' },
+  payload: { status: 503, code: 'E-5-VAC-SRV-001', message: 'down' },
+};
 
 test('listing shows results, the count and keeps the URL in sync', async ({ page }, testInfo) => {
   await page.goto('/tours');
 
   await expect(page.getByRole('heading', { level: 1, name: 'Tours' })).toBeVisible();
-  await expect(page.getByText('2 tours')).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: 'Raja Ampat Dive Expedition 6D5N' })
-  ).toBeVisible();
+  await expect(page.getByText('30 tours')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lombok Mountain Trek' })).toBeVisible();
 
   await page.screenshot({
     path: `docs/FEAT-001/evidence/listing-${testInfo.project.name}.png`,
@@ -62,21 +73,23 @@ test('filters are inline on desktop and open in a bottom drawer on mobile', asyn
 });
 
 test('pagination loads the next page of twelve tours', async ({ page }) => {
-  const response = await page.request.get('http://localhost:4010/api/v1/tours');
-  const template = (await response.json()).data[0];
-  await page.route(/\/api\/v1\/tours\?/, (route) => {
+  const response = await page.request.get('http://localhost:4010/v1/tours');
+  const body = await response.json();
+  const template = body.payload.tours[0];
+
+  await page.route(TOURS_REQUEST, (route) => {
     const pageNo = Number(new URL(route.request().url()).searchParams.get('page') || 1);
-    const data = Array.from({ length: 12 }, (_, index) => ({
+    const tours = Array.from({ length: 12 }, (_, index) => ({
       ...template,
       slug: `page-${pageNo}-tour-${index + 1}`,
-      title: `Page ${pageNo} tour ${index + 1}`,
+      name: `Page ${pageNo} tour ${index + 1}`,
     }));
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        data,
-        meta: { page: pageNo, pageSize: 12, totalItems: 24, totalPages: 2 },
+        ...body,
+        payload: { tours, page: pageNo, page_size: 12, total: 24, total_pages: 2 },
       }),
     });
   });
@@ -87,23 +100,22 @@ test('pagination loads the next page of twelve tours', async ({ page }) => {
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page).toHaveURL(/page=2/);
   await expect(page.locator('.tour-card')).toHaveCount(12);
-  await expect(
-    page.getByRole('link', { name: 'Page 2 tour 1', exact: true })
-  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Page 2 tour 1', exact: true })).toBeVisible();
 });
 
 test('a page past the last page is clamped', async ({ page }) => {
   await page.goto('/tours?page=5');
 
-  await expect(page.getByText('2 tours')).toBeVisible();
+  await expect(page.getByText('30 tours')).toBeVisible();
+  await expect(page).toHaveURL(/page=3/);
   await expect(page).not.toHaveURL(/page=5/);
 });
 
 test('a page below one or a non-integer page falls back to the first page', async ({ page }) => {
   for (const value of ['0', '2.5', 'abc']) {
     await page.goto(`/tours?page=${value}`);
-    await expect(page.getByText('2 tours')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })).toBeVisible();
+    await expect(page.getByText('30 tours')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
   }
 });
 
@@ -115,7 +127,7 @@ test('the search input stops at 100 characters', async ({ page }) => {
   await expect(search).toHaveValue('x'.repeat(100));
 });
 
-test('the category filter writes the slug to the URL', async ({ page }, testInfo) => {
+test('the category filter writes the value to the URL', async ({ page }, testInfo) => {
   await page.goto('/tours');
 
   if (testInfo.project.name === 'mobile') {
@@ -123,19 +135,20 @@ test('the category filter writes the slug to the URL', async ({ page }, testInfo
   }
 
   await page.getByRole('combobox', { name: 'Category' }).click();
-  await page.getByTitle('Nature').click();
+  await page.getByTitle('Beach').click();
 
   if (testInfo.project.name === 'mobile') {
     await page.getByRole('button', { name: 'Apply filters' }).click();
   }
 
-  await expect(page).toHaveURL(/category=nature/);
+  await expect(page).toHaveURL(/category=Beach/);
 });
 
 test('an inverted price range is reported and not requested', async ({ page }, testInfo) => {
-  let requested = false;
-  await page.route(/\/api\/v1\/tours\?/, (route) => {
-    if (/priceMin=2000000|priceMax=1000000/.test(route.request().url())) requested = true;
+  let invalidRequest = false;
+  await page.route(TOURS_REQUEST, (route) => {
+    const url = route.request().url();
+    if (/price_min=2000000/.test(url) && /price_max=1000000/.test(url)) invalidRequest = true;
     return route.continue();
   });
 
@@ -150,14 +163,15 @@ test('an inverted price range is reported and not requested', async ({ page }, t
   await page.getByRole('spinbutton', { name: 'Maximum price in rupiah' }).blur();
 
   await expect(page.getByText('Minimum price must be lower than maximum price.')).toBeVisible();
-  expect(requested).toBe(false);
+  expect(invalidRequest).toBe(false);
+  await expect(page).not.toHaveURL(/priceMax=1000000/);
 });
 
 test('the duration range writes to the URL and rejects an inverted range', async ({
   page,
 }, testInfo) => {
   let requested = null;
-  await page.route(/\/api\/v1\/tours\?/, (route) => {
+  await page.route(TOURS_REQUEST, (route) => {
     requested = route.request().url();
     return route.continue();
   });
@@ -177,7 +191,7 @@ test('the duration range writes to the URL and rejects an inverted range', async
   await expect(
     page.getByText('Minimum duration must be lower than maximum duration.')
   ).toBeVisible();
-  expect(requested).not.toContain('durationMax=2');
+  expect(requested).not.toContain('duration_max=2');
 
   await min.fill('2');
   await max.fill('5');
@@ -239,12 +253,12 @@ test('the sort control writes the requested order', async ({ page }, testInfo) =
     await page.getByRole('button', { name: 'Apply filters' }).click();
   }
 
-  await expect(page).toHaveURL(/sort=price_asc/);
+  await expect(page).toHaveURL(/sort=price-asc/);
 });
 
 test('a destination with no tours offers a way back', async ({ page }) => {
-  await page.route(/\/api\/v1\/tours\?/, (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(EMPTY_PAGE) })
+  await page.route(TOURS_REQUEST, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyPage) })
   );
 
   await page.goto('/tours?destination=bali');
@@ -272,24 +286,22 @@ test('back restores the previous listing state', async ({ page }, testInfo) => {
 
   await page.goBack();
   await expect(page).not.toHaveURL(/destination=/);
-  await expect(page.getByText('2 tours')).toBeVisible();
+  await expect(page.getByText('30 tours')).toBeVisible();
 });
 
 test('a tour card opens the detail page for that slug', async ({ page }) => {
-  // The mock server serves one fixture for every slug, so the assertion is on
-  // the slug the page asks for, not on the fixture's title.
   let requestedSlug = null;
-  await page.route(/\/api\/v1\/tours\/[^/?]+$/, (route) => {
+  await page.route(/\/v1\/tours\/[^/?]+$/, (route) => {
     requestedSlug = new URL(route.request().url()).pathname.split('/').pop();
     return route.continue();
   });
 
   await page.goto('/tours');
-  await page.getByRole('link', { name: 'Raja Ampat Dive Expedition 6D5N' }).click();
+  await page.getByRole('link', { name: 'Bali Island Escape' }).click();
 
-  await expect(page).toHaveURL(/\/tours\/raja-ampat-dive-6d5n$/);
+  await expect(page).toHaveURL(/\/tours\/bali-island-escape$/);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  expect(requestedSlug).toBe('raja-ampat-dive-6d5n');
+  expect(requestedSlug).toBe('bali-island-escape');
 });
 
 test('the search is operable from the keyboard', async ({ page }) => {
@@ -303,8 +315,8 @@ test('the search is operable from the keyboard', async ({ page }) => {
 });
 
 test('listing shows a plain empty state with one clear action', async ({ page }, testInfo) => {
-  await page.route(/\/api\/v1\/tours\?/, (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(EMPTY_PAGE) })
+  await page.route(TOURS_REQUEST, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(emptyPage) })
   );
 
   await page.goto('/tours?q=nothing');
@@ -321,35 +333,41 @@ test('listing shows a plain empty state with one clear action', async ({ page },
 });
 
 test('a slow earlier search never overwrites the newer results', async ({ page }) => {
-  await page.route(/\/api\/v1\/tours\?/, async (route) => {
+  await page.route(TOURS_REQUEST, async (route) => {
     const term = new URL(route.request().url()).searchParams.get('q') || '';
     const response = await route.fetch();
     const body = await response.json();
-    const data = body.data.filter((tour) => tour.title.toLowerCase().includes(term.toLowerCase()));
-    if (term === 'komodo') {
+    const tours = body.payload.tours.filter((tour) =>
+      tour.name.toLowerCase().includes(term.toLowerCase())
+    );
+    if (term === 'lombok') {
       await new Promise((resolve) => setTimeout(resolve, 1200));
     }
     await route.fulfill({
       response,
-      json: { ...body, data, meta: { ...body.meta, totalItems: data.length, totalPages: 1 } },
+      json: {
+        ...body,
+        payload: { ...body.payload, tours, total: tours.length, total_pages: tours.length ? 1 : 0 },
+      },
     });
   });
 
   await page.goto('/tours');
   const search = page.getByLabel('Search tours');
 
-  await search.fill('komodo');
+  await search.fill('lombok');
   await page.waitForTimeout(450);
-  await search.fill('raja');
+  await search.fill('bali');
 
-  await expect(page.getByRole('link', { name: 'Raja Ampat Dive Expedition 6D5N' })).toBeVisible();
-  await page.waitForTimeout(1500);
-  await expect(page.getByRole('link', { name: 'Raja Ampat Dive Expedition 6D5N' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lombok Mountain Trek' })).toHaveCount(0);
+
+  await page.waitForTimeout(1600);
+  await expect(page.getByRole('link', { name: 'Lombok Mountain Trek' })).toHaveCount(0);
 });
 
 test('the listing shows skeletons while the first page loads', async ({ page }, testInfo) => {
-  await page.route(/\/api\/v1\/tours\?/, async (route) => {
+  await page.route(TOURS_REQUEST, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     await route.continue();
   });
@@ -362,19 +380,17 @@ test('the listing shows skeletons while the first page loads', async ({ page }, 
     fullPage: false,
   });
 
-  await expect(page.getByRole('link', { name: 'Raja Ampat Dive Expedition 6D5N' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bali Island Escape' })).toBeVisible();
 });
 
 test('listing error offers a working retry', async ({ page }) => {
   let failing = true;
-  await page.route(/\/api\/v1\/tours\?/, async (route) => {
+  await page.route(TOURS_REQUEST, async (route) => {
     if (failing) {
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({
-          error: { code: 'SERVICE_UNAVAILABLE', message: 'down', requestId: 'req-list-1' },
-        }),
+        body: JSON.stringify(errorEnvelope),
       });
       return;
     }
@@ -386,5 +402,5 @@ test('listing error offers a working retry', async ({ page }) => {
   await expect(page.getByText("We couldn't load tours.")).toBeVisible();
   failing = false;
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByText('2 tours')).toBeVisible();
+  await expect(page.getByText('30 tours')).toBeVisible();
 });
