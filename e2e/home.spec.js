@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+const MOCK_API_URL = process.env.MOCK_API_URL || 'http://localhost:4010';
+
 const errorEnvelope = {
   success: false,
   header: { request_id: 'req-home-1', version: '1.0.0', timestamp: '2026-11-09T00:00:00.000000Z' },
@@ -83,10 +85,10 @@ test('home with no featured content still renders and offers the catalog', async
 
 test('home never shows more than six featured tours or destinations', async ({ page }) => {
   const toursBody = await (
-    await page.request.get('http://localhost:4010/v1/home/featured-tours')
+    await page.request.get(`${MOCK_API_URL}/v1/home/featured-tours`)
   ).json();
   const destinationsBody = await (
-    await page.request.get('http://localhost:4010/v1/home/featured-destinations')
+    await page.request.get(`${MOCK_API_URL}/v1/home/featured-destinations`)
   ).json();
 
   const sevenTours = Array.from({ length: 7 }, (_, index) => ({

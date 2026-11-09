@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const TOURS_REQUEST = /\/v1\/tours(\?|$)/;
+const MOCK_API_URL = process.env.MOCK_API_URL || 'http://localhost:4010';
 
 const emptyPage = {
   success: true,
@@ -73,7 +74,7 @@ test('filters are inline on desktop and open in a bottom drawer on mobile', asyn
 });
 
 test('pagination loads the next page of twelve tours', async ({ page }) => {
-  const response = await page.request.get('http://localhost:4010/v1/tours');
+  const response = await page.request.get(`${MOCK_API_URL}/v1/tours`);
   const body = await response.json();
   const template = body.payload.tours[0];
 

@@ -56,7 +56,7 @@ function audit() {
       ? [...el.labels].map((label) => label.textContent.trim()).join(' ')
       : '') ||
     el.getAttribute('title') ||
-    '';
+    (el.textContent || '').trim();
   // Ant Design puts the input inside a taller visual control, and the tour
   // card exposes a stretched title link. Measure the area the visitor hits.
   const targetRect = (el) => {
@@ -78,7 +78,13 @@ function audit() {
 
   const report = {
     overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-    unlabeled: [...document.querySelectorAll('input, select, textarea, [role="combobox"]')]
+    // Every control, including buttons and links, must carry an accessible
+    // name: aria-label, an associated label, a title, or its own text.
+    unlabeled: [
+      ...document.querySelectorAll(
+        'input, select, textarea, button, a[href], [role="combobox"], [role="button"], [role="link"]'
+      ),
+    ]
       .filter(visible)
       .filter((el) => !nameOf(el).trim())
       .map((el) => el.outerHTML.slice(0, 120)),

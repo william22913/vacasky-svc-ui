@@ -1,18 +1,45 @@
 import { expect, test } from '@playwright/test';
 
-test('detail shows the tour, its content sections and the enquiry link', async ({ page }, testInfo) => {
+test('detail shows every required field and a pre-filled enquiry link', async ({ page }, testInfo) => {
   await page.goto('/tours/bali-island-escape');
 
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Bali Island Escape');
+
+  // TC-051: every required field is present, not just the section headings.
+  const head = page.locator('.detail-head');
+  await expect(head.getByRole('link', { name: 'Bali', exact: true })).toHaveAttribute(
+    'href',
+    '/tours?destination=bali'
+  );
+  await expect(head.getByText('Beach', { exact: true })).toBeVisible();
+  await expect(head.locator('.detail-meta')).toContainText('5 days');
+  await expect(
+    page.getByText("Five days across Bali's south coast, from Uluwatu to Ubud.")
+  ).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Highlights' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'What is included' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Departure dates' })).toBeVisible();
   await expect(page.getByText('20 November 2026')).toBeVisible();
   await expect(page.getByText('Rp 4.500.000').first()).toBeVisible();
+  await expect(page.locator('.gallery__lead img')).toHaveAttribute(
+    'alt',
+    'Bali Island Escape beach at sunset'
+  );
+  await expect(page.locator('.gallery__thumbs img')).toHaveCount(3);
 
+  // TC-056: the action opens WhatsApp with the tour name in the message and
+  // the page has no enquiry form, booking step or payment control.
   const enquiry = page.getByRole('link', { name: 'Enquire about this tour' }).first();
-  await expect(enquiry).toHaveAttribute('href', /^https:\/\/wa\.me\//);
+  const href = await enquiry.getAttribute('href');
+  expect(href).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
+  expect(href).toContain(encodeURIComponent('Bali Island Escape'));
   await expect(enquiry).toHaveAttribute('target', '_blank');
+  await expect(page.locator('.detail-page form')).toHaveCount(0);
+  await expect(
+    page.locator('.detail-page input, .detail-page textarea, .detail-page select')
+  ).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /book|pay|checkout|reserve/i })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /book|pay|checkout|reserve/i })).toHaveCount(0);
 
   await page.screenshot({
     path: `docs/FEAT-001/evidence/detail-${testInfo.project.name}.png`,
@@ -21,14 +48,37 @@ test('detail shows the tour, its content sections and the enquiry link', async (
 });
 
 test('gallery thumbnails switch the lead image', async ({ page }) => {
+  // Serve the photos so MediaImage keeps the contract URL instead of falling
+  // back to the local placeholder; only then can the change be observed.
+  await page.route(/^https:\/\/cdn\.example\//, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>',
+    })
+  );
+
   await page.goto('/tours/bali-island-escape');
+  const lead = page.locator('.gallery__lead img');
   const thumbs = page.getByRole('button', { name: /Show photo/ });
   await expect(thumbs).toHaveCount(3);
+
+  const secondThumb = thumbs.nth(1);
+  const expectedSrc = await secondThumb.locator('img').getAttribute('src');
+  const expectedAlt = await secondThumb.locator('img').getAttribute('alt');
+  expect(expectedSrc).toContain('/tours/bali-2.jpg');
+  expect(expectedAlt).toBe('Rice terraces in Ubud');
+
+  await expect(lead).toHaveAttribute('src', 'https://cdn.example/tours/bali-1.jpg');
+  await expect(lead).toHaveAttribute('alt', 'Bali Island Escape beach at sunset');
   await expect(thumbs.nth(0)).toHaveAttribute('aria-pressed', 'true');
 
-  await thumbs.nth(1).click();
+  await secondThumb.click();
+
   await expect(thumbs.nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(thumbs.nth(0)).toHaveAttribute('aria-pressed', 'false');
+  await expect(lead).toHaveAttribute('src', expectedSrc);
+  await expect(lead).toHaveAttribute('alt', expectedAlt);
 });
 
 test('the detail page shows a skeleton, then the tour', async ({ page }, testInfo) => {
