@@ -50,14 +50,14 @@
       ]
     },
     {
-      "name": "api proxy health",
-      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/healthz" },
+      "name": "api proxy reaches the service",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tours" },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('api reachable through nginx', () => { pm.response.to.have.status(200); });"
+              "pm.test('api reachable through nginx', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().data).to.be.an('array'); });"
             ]
           }
         }
