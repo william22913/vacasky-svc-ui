@@ -16,6 +16,9 @@
 }
 
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-family: var(--font-display);
   font-size: 24px;
   line-height: 1;
@@ -132,11 +135,16 @@
 .site-footer__list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
   font-size: 14px;
+}
+
+.site-footer__list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 .site-footer__bottom {
@@ -655,7 +663,7 @@
 }
 
 .range__sep {
-  color: var(--color-text-muted);
+  color: var(--color-text-muted-on-surface);
   font-size: 13px;
 }
 
@@ -1136,13 +1144,26 @@
   text-transform: uppercase;
 }
 
-.ant-btn-primary:not(:disabled):hover,
-.ant-btn-primary:not(:disabled):focus {
-  background: var(--color-primary-dark);
+.ant-btn.ant-btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: none;
 }
 
-.ant-btn-primary {
-  box-shadow: none;
+.ant-btn.ant-btn-primary:not(:disabled):hover,
+.ant-btn.ant-btn-primary:not(:disabled):focus {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+/* Every control reaches the 44px target from the spec, including large buttons
+   that Ant Design fixes at 40px. */
+.ant-btn {
+  min-height: 44px;
+}
+
+.ant-btn.ant-btn-icon-only {
+  min-width: 44px;
 }
 
 .ant-btn-round.ant-btn-lg {
@@ -1234,6 +1255,13 @@ a.ant-btn {
 
 .ant-select-single .ant-select-selection-placeholder {
   line-height: 30px;
+  color: var(--color-text-muted);
+}
+
+.ant-input::placeholder,
+.ant-input-number-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
 }
 
 .ant-input-number:hover,

@@ -133,6 +133,13 @@ select {
   background: var(--color-surface);
 }
 
+/* #2c7ba8 is only 4.2:1 on the surface colour, so text on the surface band
+   uses the darker primary. */
+.section--surface .eyebrow,
+.section--surface .section__link {
+  color: var(--color-primary-dark);
+}
+
 .section__head {
   display: flex;
   flex-wrap: wrap;
@@ -147,6 +154,9 @@ select {
 }
 
 .section__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 600;
 }

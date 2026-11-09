@@ -35,7 +35,7 @@ function Gallery({ images, resetKey }) {
               aria-label={`Show photo ${index + 1} of ${images.length}`}
               onClick={() => setActive(index)}
             >
-              <MediaImage image={{ ...image, alt: '' }} />
+              <MediaImage image={image} />
             </button>
           ))}
         </div>
