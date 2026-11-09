@@ -7,7 +7,8 @@ spec_version: 1
 testcase_version: 1
 architecture_version: 1
 contract_version: 1
-tested_commit: 34a64c1
+tested_commit: 34a64c1ced8d5c71d55048c449627de22ef981b6
+pr_url: https://github.com/william22913/vacasky-svc-ui/pull/1
 mock_mode: mock-server.mjs (port 4010)
 last_updated: 2026-11-09
 ---
@@ -18,7 +19,8 @@ Feature: tour and travel agency website (Home, Tour listing, Tour detail,
 Tour not found, Offline page).
 
 Repo: `william22913/vacasky-svc-ui` — branch
-`feat/FEAT-001-dev-home-listing-detail`, tested at commit `34a64c1`.
+`feat/FEAT-001-dev-home-listing-detail`, tested at commit
+`34a64c1ced8d5c71d55048c449627de22ef981b6` (PR #1).
 Test cases: `docs/FEAT-001/testcase.md` version 1 (PR #29). Spec:
 `docs/FEAT-001/spec.md` version 1 (PR #28). API contract version 1, used
 unchanged.
