@@ -84,25 +84,34 @@ test('home with no featured content still renders and offers the catalog', async
   await expect(page).toHaveURL(/\/tours\?q=komodo/);
 });
 
-test('home never shows more than six featured tours', async ({ page }) => {
+test('home never shows more than six featured tours or destinations', async ({ page }) => {
   const response = await page.request.get('http://localhost:4010/api/v1/home');
   const body = await response.json();
-  const template = body.featuredTours[0];
-  const seven = Array.from({ length: 7 }, (_, index) => ({
-    ...template,
+  const sevenTours = Array.from({ length: 7 }, (_, index) => ({
+    ...body.featuredTours[0],
     slug: `sample-tour-${index + 1}`,
     title: `Sample featured tour ${index + 1}`,
+  }));
+  const sevenDestinations = Array.from({ length: 7 }, (_, index) => ({
+    ...body.featuredDestinations[0],
+    slug: `sample-destination-${index + 1}`,
+    name: `Sample destination ${index + 1}`,
   }));
   await page.route('**/api/v1/home', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ...body, featuredTours: seven }),
+      body: JSON.stringify({
+        ...body,
+        featuredTours: sevenTours,
+        featuredDestinations: sevenDestinations,
+      }),
     })
   );
 
   await page.goto('/');
   await expect(page.locator('.tour-card')).toHaveCount(6);
+  await expect(page.locator('.destination-card')).toHaveCount(6);
 });
 
 test('hero search opens the listing with the keyword in the URL', async ({ page }) => {

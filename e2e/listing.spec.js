@@ -92,6 +92,14 @@ test('a page past the last page is clamped', async ({ page }) => {
   await expect(page).not.toHaveURL(/page=5/);
 });
 
+test('a page below one or a non-integer page falls back to the first page', async ({ page }) => {
+  for (const value of ['0', '2.5', 'abc']) {
+    await page.goto(`/tours?page=${value}`);
+    await expect(page.getByText('2 tours')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })).toBeVisible();
+  }
+});
+
 test('the search input stops at 100 characters', async ({ page }) => {
   await page.goto('/tours');
 
@@ -136,6 +144,95 @@ test('an inverted price range is reported and not requested', async ({ page }, t
 
   await expect(page.getByText('Minimum price must be lower than maximum price.')).toBeVisible();
   expect(requested).toBe(false);
+});
+
+test('the duration range writes to the URL and rejects an inverted range', async ({
+  page,
+}, testInfo) => {
+  let requested = null;
+  await page.route(/\/api\/v1\/tours\?/, (route) => {
+    requested = route.request().url();
+    return route.continue();
+  });
+
+  await page.goto('/tours');
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: /Filters/ }).click();
+  }
+
+  const min = page.getByRole('spinbutton', { name: 'Minimum duration in days' });
+  const max = page.getByRole('spinbutton', { name: 'Maximum duration in days' });
+
+  await min.fill('5');
+  await max.fill('2');
+  await max.blur();
+  await expect(
+    page.getByText('Minimum duration must be lower than maximum duration.')
+  ).toBeVisible();
+  expect(requested).not.toContain('durationMax=2');
+
+  await min.fill('2');
+  await max.fill('5');
+  await max.blur();
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+  }
+
+  await expect(page).toHaveURL(/durationMin=2/);
+  await expect(page).toHaveURL(/durationMax=5/);
+});
+
+test('equal price and duration bounds are accepted', async ({ page }, testInfo) => {
+  await page.goto('/tours');
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: /Filters/ }).click();
+  }
+
+  await page.getByRole('spinbutton', { name: 'Minimum price in rupiah' }).fill('2000000');
+  await page.getByRole('spinbutton', { name: 'Maximum price in rupiah' }).fill('2000000');
+  await page.getByRole('spinbutton', { name: 'Maximum price in rupiah' }).blur();
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+    await page.getByRole('button', { name: /Filters/ }).click();
+  }
+
+  await page.getByRole('spinbutton', { name: 'Minimum duration in days' }).fill('3');
+  await page.getByRole('spinbutton', { name: 'Maximum duration in days' }).fill('3');
+  await page.getByRole('spinbutton', { name: 'Maximum duration in days' }).blur();
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+  }
+
+  await expect(page).toHaveURL(/priceMin=2000000/);
+  await expect(page).toHaveURL(/priceMax=2000000/);
+  await expect(page).toHaveURL(/durationMin=3/);
+  await expect(page).toHaveURL(/durationMax=3/);
+  await expect(page.getByText('Minimum price must be lower than maximum price.')).toHaveCount(0);
+  await expect(page.getByText('Minimum duration must be lower than maximum duration.')).toHaveCount(0);
+});
+
+test('the sort control writes the requested order', async ({ page }, testInfo) => {
+  await page.goto('/tours');
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: /Filters/ }).click();
+  }
+
+  const sort = page.getByRole('combobox', { name: 'Sort by' });
+  await sort.focus();
+  await sort.press('Enter');
+  await page.getByTitle('Price: low to high').click();
+
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Apply filters' }).click();
+  }
+
+  await expect(page).toHaveURL(/sort=price_asc/);
 });
 
 test('a destination with no tours offers a way back', async ({ page }) => {
