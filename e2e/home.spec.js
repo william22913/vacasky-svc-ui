@@ -27,6 +27,84 @@ test('home shows the hero, featured tours and featured destinations', async ({ p
   });
 });
 
+test('a featured tour opens its page and a destination opens its listing', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' }).click();
+  await expect(page).toHaveURL(/\/tours\/komodo-sailing-3d2n$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(
+    'Komodo National Park Sailing 3D2N'
+  );
+
+  await page.goBack();
+  const bali = page.getByRole('link', { name: 'Bali', exact: true });
+  await expect(bali).toHaveAttribute('href', '/tours?destination=bali');
+  await bali.click();
+  await expect(page).toHaveURL(/\/tours\?destination=bali$/);
+});
+
+test('home shows six skeletons while the feed loads', async ({ page }, testInfo) => {
+  await page.route('**/api/v1/home', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await route.continue();
+  });
+
+  await page.goto('/');
+  await expect(page.locator('.skeleton-card')).toHaveCount(6);
+
+  await page.screenshot({
+    path: `docs/FEAT-001/evidence/home-loading-${testInfo.project.name}.png`,
+    fullPage: false,
+  });
+
+  await expect(
+    page.getByRole('link', { name: 'Komodo National Park Sailing 3D2N' })
+  ).toBeVisible();
+});
+
+test('home with no featured content still renders and offers the catalog', async ({ page }) => {
+  const response = await page.request.get('http://localhost:4010/api/v1/home');
+  const body = await response.json();
+  await page.route('**/api/v1/home', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ...body, featuredTours: [], featuredDestinations: [] }),
+    })
+  );
+
+  await page.goto('/');
+
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByText('New tours are on the way.')).toBeVisible();
+  await expect(page.getByText('Destinations are being added.')).toBeVisible();
+
+  await page.getByLabel('Search tours').fill('komodo');
+  await page.getByRole('button', { name: 'Search' }).click();
+  await expect(page).toHaveURL(/\/tours\?q=komodo/);
+});
+
+test('home never shows more than six featured tours', async ({ page }) => {
+  const response = await page.request.get('http://localhost:4010/api/v1/home');
+  const body = await response.json();
+  const template = body.featuredTours[0];
+  const seven = Array.from({ length: 7 }, (_, index) => ({
+    ...template,
+    slug: `sample-tour-${index + 1}`,
+    title: `Sample featured tour ${index + 1}`,
+  }));
+  await page.route('**/api/v1/home', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ...body, featuredTours: seven }),
+    })
+  );
+
+  await page.goto('/');
+  await expect(page.locator('.tour-card')).toHaveCount(6);
+});
+
 test('hero search opens the listing with the keyword in the URL', async ({ page }) => {
   await page.goto('/');
 

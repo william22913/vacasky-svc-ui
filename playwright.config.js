@@ -24,6 +24,13 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 120000,
     },
+    {
+      // Production build for the service-worker check.
+      command: 'npm run build && npx vite preview --port 4174 --strictPort',
+      url: 'http://localhost:4174',
+      reuseExistingServer: true,
+      timeout: 180000,
+    },
   ],
   projects: [
     {
