@@ -7,7 +7,7 @@ spec_version: 1
 testcase_version: 1
 architecture_version: 1
 contract_version: 3
-tested_commit: b3b49ba5ee002dd31c32e3450f3558173a743589
+tested_commit: e1adbd137bd994bc1c7f2de1abfa0ca4864c74c5
 pr_url: https://github.com/william22913/vacasky-svc-ui/pull/1
 mock_mode: mock-server.mjs (port 4010), contract version 3
 last_updated: 2026-11-09
@@ -20,16 +20,16 @@ Tour not found, Offline page).
 
 Repo: `william22913/vacasky-svc-ui` — branch
 `feat/FEAT-001-dev-home-listing-detail`, continuing PR #1. The run below was
-made against the working tree that became commit
-`b3b49ba5ee002dd31c32e3450f3558173a743589` (contract-version-3 rework on top
-of base commit `fd4fc36`).
+made against commit `e1adbd137bd994bc1c7f2de1abfa0ca4864c74c5`, the test
+commit that closes the round-3 review; this results document is the
+metadata commit immediately after it and changes no application code.
 
 Test cases: `docs/FEAT-001/testcase.md` version 1 (docs PR #29). Spec:
 `docs/FEAT-001/spec.md` version 1 (docs PR #28). UI map:
 `docs/FEAT-001/UIMap.md` version 1. API contract **version 3**, supplied
 with the task and used unchanged.
 
-Everything below was executed on 2026-11-09 against the same working tree.
+Everything below was executed on 2026-11-09 against that commit.
 The backend service is a separate repo and is out of scope for this
 document.
 
@@ -40,7 +40,7 @@ document.
 | Lint | `npm run lint` | PASS — 0 errors, 0 warnings (`--max-warnings 0`) |
 | Unit/component tests | `npm test` | PASS — 7 files, 31 tests |
 | Production build | `npm run build` | PASS — Vite build; PWA precache 24 entries |
-| End-to-end (desktop 1440×900 + mobile 360×800) | `npx playwright test` | PASS — 80 passed (40 per project), 0 skipped, 3.3 min |
+| End-to-end (desktop 1440×900 + mobile 360×800) | `npx playwright test` | PASS — 80 passed (40 per project), 0 skipped, 2.7 min |
 | Live Docker/nginx preview | `verify_stack` with `docker-compose.verify.yml` | PASS — stack healthy; Newman 5 requests, 7 assertions, 0 failures |
 
 Every test runs on both the desktop and mobile projects; there are no
@@ -139,12 +139,12 @@ observe with the static mock.
 | TC-048 | End-to-end | PASS | Direct visits to `/tours?destination=bali`, `?q=nothing`, `?page=5` and `/tours?page=0` restore the same view |
 | TC-049 | End-to-end | PASS | `listing.spec.js › back restores the previous listing state` (forward is native browser history) |
 | TC-050 | End-to-end | PASS | `listing.spec.js › a tour card opens the detail page for that slug` |
-| TC-051 | UI | PASS | `detail.spec.js › detail shows the tour, its content sections and the enquiry link` covers name, destination, category, duration, price, description, highlights, what is included, images and departure dates (20 November 2026) |
+| TC-051 | UI | PASS | `detail.spec.js › detail shows every required field and a pre-filled enquiry link` asserts name, destination link and slug, category, duration, price, description text, highlights, what is included, three gallery images with alt text and departure dates (20 November 2026) |
 | TC-052 | UI | PASS | `detail.spec.js` asserts `Rp 4.500.000` with "per person" |
 | TC-053 | End-to-end | PASS | `detail.spec.js › a missing tour shows the tour not found page` (404 response) with a link back to the listing; the service returns 404 |
 | TC-054 | End-to-end | PASS (UI) | The UI renders the not-found page for a 404; publication state is a service rule |
 | TC-055 | End-to-end | PASS (UI) | A fresh load after a 404 renders the not-found page with no stale content (same path as TC-054) |
-| TC-056 | UI | PASS | `detail.spec.js` asserts a `https://wa.me/` link containing the tour name, `target="_blank"`, with no form and no payment |
+| TC-056 | UI | PASS | same test — asserts the `https://wa.me/` href contains the URL-encoded tour name, `target="_blank"`, and that the detail page has no form, input, booking/payment control or enquiry form |
 | TC-057 | UI | PASS | `detail.spec.js › the detail page shows a skeleton, then the tour` |
 | TC-058 | UI | PASS | `detail.spec.js › a detail load failure offers a working retry`; plain message only |
 | TC-059 | UI | PASS | `listing.spec.js › the listing shows skeletons while the first page loads` (12 cards); the same skeleton renders for debounced search/filter reloads |
@@ -153,7 +153,7 @@ observe with the static mock.
 | TC-062 | UI | PASS | `accessibility.spec.js` — no horizontal overflow on the three screens at 360 and 1440; the empty listing is screenshotted at both widths |
 | TC-063 | UI | PASS | `accessibility.spec.js` — every visible interactive target is at least 44×44 (search, selects, range inputs, buttons, cards, enquiry, navigation) |
 | TC-064 | UI | PASS | `listing.spec.js › the search is operable from the keyboard`; controls are native/AntD focusable elements with no keyboard traps |
-| TC-065 | UI | PASS | `accessibility.spec.js` — zero controls without an accessible name |
+| TC-065 | UI | PASS | `accessibility.spec.js` — zero unlabeled controls, scanning inputs, selects, textareas, buttons, links and ARIA button/link roles, with accessible names from aria-label, labels, title or text content |
 | TC-066 | UI | PASS | 2px `:focus-visible` ring with offset defined for all focusable elements in `src/styles/app.css`; visible in the keyboard test |
 | TC-067 | UI | PASS | `accessibility.spec.js` — header, nav, main, footer and exactly one `h1` on each screen |
 | TC-068 | UI | PASS | `accessibility.spec.js` — zero images without alt text; `MediaImage` keeps the contract alt |
