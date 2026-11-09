@@ -7,7 +7,7 @@ spec_version: 1
 testcase_version: 1
 architecture_version: 1
 contract_version: 3
-tested_commit: fd4fc36
+tested_commit: b3b49ba5ee002dd31c32e3450f3558173a743589
 pr_url: https://github.com/william22913/vacasky-svc-ui/pull/1
 mock_mode: mock-server.mjs (port 4010), contract version 3
 last_updated: 2026-11-09
@@ -20,9 +20,9 @@ Tour not found, Offline page).
 
 Repo: `william22913/vacasky-svc-ui` — branch
 `feat/FEAT-001-dev-home-listing-detail`, continuing PR #1. The run below was
-made against the working tree that carries the contract-version-3 rework on
-top of base commit `fd4fc36`; the pushed commit SHA is appended to this
-document after the branch is pushed.
+made against the working tree that became commit
+`b3b49ba5ee002dd31c32e3450f3558173a743589` (contract-version-3 rework on top
+of base commit `fd4fc36`).
 
 Test cases: `docs/FEAT-001/testcase.md` version 1 (docs PR #29). Spec:
 `docs/FEAT-001/spec.md` version 1 (docs PR #28). UI map:
