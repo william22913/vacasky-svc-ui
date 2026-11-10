@@ -142,6 +142,14 @@ test('a missing tour shows the tour not found page', async ({ page }, testInfo) 
   await expect(page.getByRole('heading', { name: 'Tour not found' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Back to all tours' })).toBeVisible();
 
+  // Same page frame as the other state pages: the footer closes the viewport
+  // instead of floating above a strip of white space.
+  const footerBottom = await page.evaluate(
+    () => document.querySelector('.site-footer').getBoundingClientRect().bottom
+  );
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  expect(footerBottom).toBeGreaterThanOrEqual(viewportHeight - 1);
+
   await page.screenshot({
     path: `docs/FEAT-001/evidence/not-found-${testInfo.project.name}.png`,
     fullPage: false,

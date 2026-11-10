@@ -77,11 +77,6 @@ export function FilterFields({
             onPressEnter={() => onCommitRange('price')}
           />
         </div>
-        {rangeError === 'price' ? (
-          <p className="filter-bar__error" role="alert">
-            Minimum price must be lower than maximum price.
-          </p>
-        ) : null}
       </div>
 
       <div className="filter-field filter-field--range">
@@ -113,11 +108,6 @@ export function FilterFields({
             onPressEnter={() => onCommitRange('duration')}
           />
         </div>
-        {rangeError === 'duration' ? (
-          <p className="filter-bar__error" role="alert">
-            Minimum duration must be lower than maximum duration.
-          </p>
-        ) : null}
       </div>
 
       <div className="filter-field">
@@ -131,6 +121,23 @@ export function FilterFields({
           options={SORT_OPTIONS}
         />
       </div>
+
+      {/* Range errors live on their own full-width row so they never change
+          the height or margin of a control. */}
+      {rangeError ? (
+        <div className="filter-bar__errors">
+          {rangeError === 'price' ? (
+            <p className="filter-bar__error" role="alert">
+              Minimum price must be lower than maximum price.
+            </p>
+          ) : null}
+          {rangeError === 'duration' ? (
+            <p className="filter-bar__error" role="alert">
+              Minimum duration must be lower than maximum duration.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

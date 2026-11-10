@@ -1,3 +1,15 @@
+/* Shell keeps the footer at the bottom on short pages, like the not-found and
+   offline states. */
+.site-shell {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.site-shell > main {
+  flex: 1;
+}
+
 /* Header */
 .site-header {
   position: sticky;
@@ -759,6 +771,19 @@
   font-size: 13px;
 }
 
+/* One full-width row for range errors, so a message never changes the height
+   or the margin of a control beside it. */
+.filter-bar__errors {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.filter-bar__errors .filter-bar__error {
+  margin-top: 0;
+}
+
 .filter-bar__hint {
   margin-top: var(--space-2);
   color: var(--color-text-muted-on-surface);
@@ -769,15 +794,20 @@
   .filter-bar__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .filter-bar__grid > .filter-field--range {
+    grid-column: span 2;
+  }
 }
 
 @media (min-width: 1024px) {
   .filter-bar__grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    /* Destination, category, price, duration and sort share one row. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr);
   }
 
   .filter-bar__grid > .filter-field--range {
-    grid-column: span 2;
+    grid-column: auto;
   }
 }
 

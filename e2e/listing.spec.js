@@ -161,11 +161,32 @@ test('an inverted price range is reported and not requested', async ({ page }, t
 
   await page.getByRole('spinbutton', { name: 'Minimum price in rupiah' }).fill('2000000');
   await page.getByRole('spinbutton', { name: 'Maximum price in rupiah' }).fill('1000000');
+
+  const grid =
+    testInfo.project.name === 'mobile'
+      ? page.locator('.ant-drawer .filter-bar__grid')
+      : page.locator('.filter-bar--desktop .filter-bar__grid');
+  // Relative offsets, so a drawer still sliding in does not count as a shift.
+  const offsets = () =>
+    grid.locator('.filter-field').evaluateAll((els) => {
+      const base = els[0].getBoundingClientRect().top;
+      return els.map((el) => Math.round(el.getBoundingClientRect().top - base));
+    });
+  const before = await offsets();
+
   await page.getByRole('spinbutton', { name: 'Maximum price in rupiah' }).blur();
 
   await expect(page.getByText('Minimum price must be lower than maximum price.')).toBeVisible();
   expect(invalidRequest).toBe(false);
   await expect(page).not.toHaveURL(/priceMax=1000000/);
+
+  // The error must not move or resize any control beside it.
+  expect(await offsets()).toEqual(before);
+
+  await page.screenshot({
+    path: `docs/FEAT-001/evidence/listing-invalid-range-${testInfo.project.name}.png`,
+    fullPage: false,
+  });
 });
 
 test('the duration range writes to the URL and rejects an inverted range', async ({
