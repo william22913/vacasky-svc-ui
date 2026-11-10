@@ -1,0 +1,22 @@
+# Small preview stack used to verify the built image end to end: nginx serves
+# the SPA and proxies /v1 to the contract mock. Not part of the deliverable.
+services:
+  web:
+    environment:
+      API_UPSTREAM: http://mock-api:4010
+    depends_on:
+      - mock-api
+    mem_limit: 128m
+    cpus: 0.5
+
+  mock-api:
+    image: node:20-alpine
+    working_dir: /app
+    command: ['node', 'mock-server.mjs', '4010']
+    volumes:
+      - ./mock-server.mjs:/app/mock-server.mjs:ro
+    mem_limit: 96m
+    cpus: 0.5
+    read_only: true
+    security_opt:
+      - no-new-privileges:true

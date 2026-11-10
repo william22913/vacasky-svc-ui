@@ -1,0 +1,5 @@
+{
+  "stacks": ["react-vite"],
+  "libs": ["react", "react-dom", "react-router-dom", "antd", "axios", "vite-plugin-pwa"],
+  "note": "Greenfield public site for vacasky-svc FEAT-001: React 18 + Vite 5 + JSX, Ant Design 4 for behaviour primitives (no nexcomponent-ui package in this repo), axios adapter -> service -> hook -> page flow, design tokens in src/styles/tokens.css, static build served by nginx."
+}

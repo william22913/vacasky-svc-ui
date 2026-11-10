@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    image: vacasky-svc-ui:local
+    ports:
+      - '8080:80'
+    environment:
+      # Same-origin /v1 requests are proxied here by nginx.
+      API_UPSTREAM: ${API_UPSTREAM:-http://api:8080}
+    restart: unless-stopped

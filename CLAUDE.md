@@ -18,5 +18,6 @@ self-hosted Anton and Inter fonts, PWA through vite-plugin-pwa.
 ## Feature docs
 
 - FEAT-001: [spec](docs/FEAT-001/spec.md), [UI map](docs/FEAT-001/UIMap.md),
-  [test cases](docs/FEAT-001/testcase.md) and
-  [architecture](docs/FEAT-001/architecture.md).
+  [test cases](docs/FEAT-001/testcase.md),
+  [architecture](docs/FEAT-001/architecture.md) and
+  [frontend test results](docs/FEAT-001/fe-test-results.md).
