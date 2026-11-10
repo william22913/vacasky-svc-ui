@@ -1,16 +1,16 @@
 ---
 feature_code: FEAT-001
 service: vacasky-svc
-version: 2
+version: 3
 status: complete
 spec_version: 1
 testcase_version: 1
 architecture_version: 1
 contract_version: 3
-tested_commit: e1adbd137bd994bc1c7f2de1abfa0ca4864c74c5
+tested_commit: 33a5a5c45b97fc70db48a0e95e6ebe502850555f
 pr_url: https://github.com/william22913/vacasky-svc-ui/pull/1
 mock_mode: mock-server.mjs (port 4010), contract version 3
-last_updated: 2026-11-09
+last_updated: 2026-11-10
 ---
 
 # FEAT-001 — Frontend Test Results
@@ -20,16 +20,16 @@ Tour not found, Offline page).
 
 Repo: `william22913/vacasky-svc-ui` — branch
 `feat/FEAT-001-dev-home-listing-detail`, continuing PR #1. The run below was
-made against commit `e1adbd137bd994bc1c7f2de1abfa0ca4864c74c5`, the test
-commit that closes the round-3 review; this results document is the
-metadata commit immediately after it and changes no application code.
+made against commit `33a5a5c45b97fc70db48a0e95e6ebe502850555f`, the commit
+that closes the UI review; this results document is the metadata commit
+immediately after it and changes no application code.
 
 Test cases: `docs/FEAT-001/testcase.md` version 1 (docs PR #29). Spec:
 `docs/FEAT-001/spec.md` version 1 (docs PR #28). UI map:
 `docs/FEAT-001/UIMap.md` version 1. API contract **version 3**, supplied
 with the task and used unchanged.
 
-Everything below was executed on 2026-11-09 against that commit.
+Everything below was executed on 2026-11-10 against that commit.
 The backend service is a separate repo and is out of scope for this
 document.
 
@@ -40,12 +40,30 @@ document.
 | Lint | `npm run lint` | PASS — 0 errors, 0 warnings (`--max-warnings 0`) |
 | Unit/component tests | `npm test` | PASS — 7 files, 31 tests |
 | Production build | `npm run build` | PASS — Vite build; PWA precache 24 entries |
-| End-to-end (desktop 1440×900 + mobile 360×800) | `npx playwright test` | PASS — 80 passed (40 per project), 0 skipped, 2.7 min |
+| End-to-end (desktop 1440×900 + mobile 360×800) | `npx playwright test` | PASS — 80 passed (40 per project), 0 skipped, 2.5 min |
 | Live Docker/nginx preview | `verify_stack` with `docker-compose.verify.yml` | PASS — stack healthy; Newman 5 requests, 7 assertions, 0 failures |
 
 Every test runs on both the desktop and mobile projects; there are no
 conditional skips. The responsive filter test asserts the inline filter bar
 on desktop and the bottom drawer on mobile in the same test.
+
+### UI review changes
+
+Two items from the UI review were fixed and are now covered by assertions:
+
+1. **Listing — invalid range.** The range error no longer renders inside the
+   Price or Duration field. It moves to its own full-width row under the
+   grid (`.filter-bar__errors`), and on desktop the five controls share one
+   row (`1fr 1fr 2fr 2fr 1fr`). `listing.spec.js › an inverted price range is
+   reported and not requested` records the top offset of every field before
+   and after the error appears and requires them to be identical, so a
+   message can never shift a neighbouring control again.
+2. **Tour not found — page frame.** The shell is now a full-height flex
+   column with `main` growing to fill it, so the Tour not found state ends at
+   the bottom of the viewport like the generic Page not found and the offline
+   page instead of leaving white space under the footer.
+   `detail.spec.js › a missing tour shows the tour not found page` asserts the
+   footer's bottom edge reaches the viewport bottom.
 
 ## Test environment
 
@@ -223,7 +241,8 @@ All screenshots were produced by the Playwright suite in this run
 - Listing: `listing-desktop.png`, `listing-mobile.png`,
   `listing-loading-desktop.png`, `listing-loading-mobile.png`,
   `listing-empty-desktop.png`, `listing-empty-mobile.png`,
-  `listing-filters-mobile.png`
+  `listing-filters-mobile.png`, `listing-invalid-range-desktop.png`,
+  `listing-invalid-range-mobile.png`
 - Detail: `detail-desktop.png`, `detail-mobile.png`,
   `detail-loading-desktop.png`, `detail-loading-mobile.png`,
   `not-found-desktop.png`, `not-found-mobile.png`
